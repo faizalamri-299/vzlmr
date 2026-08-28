@@ -1,0 +1,1116 @@
+/* ── Tokens ─────────────────────────────────────────────────────────── */
+/* Palette, type and the hue spectrum are taken from motion.dev's example
+   sandbox, so this site reads as the same family of design. */
+:root {
+  --background: #0d1111;
+  --layer: #13181a;
+  --layer-2: #1a2022;
+  --border: #1e2427;
+  --surface-deep: #060607;
+
+  --foreground: #ededec;
+  --foreground-feint: #7a8180;
+  --white: #fff;
+  --white-feint: #898d8e;
+
+  /* Pink → cyan. Cards, counters and the progress line all walk this. */
+  --hue-1: #ff0088;
+  --hue-2: #dd00ee;
+  --hue-3: #9911ff;
+  --hue-4: #1e75f7;
+  --hue-5: #0cdcf7;
+  --accent: var(--hue-5);
+
+  /* The New Abnormal (The Strokes) — sampled off the cover painting, Basquiat's
+     "Bird on Money": the teal-cerulean field, the bird's amber, and the bone
+     cream of the canvas. */
+  --tna-teal: #0399a6;
+  --tna-blue: #0495c4;
+  --tna-sky: #38a6d1;
+  --tna-amber: #fcb814;
+  --tna-gold: #fec60d;
+  --tna-bone: #c9c49a;
+  --tna-ink: #141617;
+
+  --spectrum: linear-gradient(
+    90deg,
+    var(--hue-1),
+    var(--hue-2),
+    var(--hue-3),
+    var(--hue-4),
+    var(--hue-5)
+  );
+
+  --display: 'League Gothic', 'Haettenschweiler', 'Arial Narrow', sans-serif;
+  --sans: 'TASA Orbiter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --gut: clamp(1.25rem, 4vw, 3.5rem);
+  --radius: 12px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Older names kept as aliases so the rules below stay readable. */
+  --ink: var(--background);
+  --ink-2: var(--layer);
+  --ink-3: var(--layer-2);
+  --paper: var(--foreground);
+  --paper-dim: var(--white-feint);
+  --paper-faint: var(--foreground-feint);
+  --line: var(--border);
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--sans);
+  font-feature-settings: 'ss03' on, 'cv05' on;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+body.is-locked { overflow: hidden; }
+
+img { display: block; max-width: 100%; }
+
+a { color: inherit; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 200;
+  padding: 0.75rem 1.25rem;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 0.85rem;
+}
+.skip-link:focus { left: 1rem; top: 1rem; }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Centred text reads badly with a one-word last line. */
+.hero h1,
+.hero-sub,
+.reel-title,
+.reel-lede,
+.section-head h2,
+.contact h2,
+.contact-lede {
+  text-wrap: balance;
+}
+.about-body p:not(.eyebrow) { text-wrap: pretty; }
+
+/* Kickers, labels and numbers all run in Geist Mono. */
+.eyebrow,
+.nav a,
+.hero-meta,
+.scroll-cue,
+.filter,
+.tile-caption span,
+.detail-list dt,
+.detail-list .k,
+.stat span,
+.lb-bar,
+.lb-foot p,
+.lb-close {
+  font-family: var(--mono);
+}
+
+/* ── Shared layout ──────────────────────────────────────────────────── */
+.shell {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding-inline: var(--gut);
+}
+
+.eyebrow {
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--paper-faint);
+  margin: 0;
+}
+
+/* Reveal-on-scroll. Starts visible so the page is readable with JS off. */
+.reveal { opacity: 1; }
+.js .reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.9s var(--ease), transform 0.9s var(--ease);
+}
+.js .reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+.site-header {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.35rem var(--gut);
+  transition: background 0.4s var(--ease), padding 0.4s var(--ease),
+    border-color 0.4s var(--ease);
+  border-bottom: 1px solid transparent;
+}
+/* Over a bright photograph the transparent header loses its nav, so it carries
+   a soft scrim that fades out once it takes a real background. */
+.site-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(13, 17, 17, 0.55), rgba(13, 17, 17, 0));
+  transition: opacity 0.4s var(--ease);
+}
+.site-header.is-stuck::before { opacity: 0; }
+
+.site-header.is-stuck {
+  padding-block: 0.85rem;
+  background: rgba(13, 17, 17, 0.82);
+  backdrop-filter: blur(14px);
+  border-bottom-color: var(--line);
+}
+
+.wordmark {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 1.65rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-decoration: none;
+  line-height: 1;
+}
+.wordmark span { color: var(--accent); }
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 2.5vw, 2.25rem);
+}
+.nav a {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--paper-dim);
+  transition: color 0.25s var(--ease);
+}
+.nav a:hover { color: var(--paper); }
+
+@media (max-width: 620px) {
+  .nav a:not(.nav-cta) { display: none; }
+}
+
+.nav-cta {
+  padding: 0.55rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--paper) !important;
+}
+.nav-cta:hover { border-color: var(--accent); }
+
+/* ── Hero ───────────────────────────────────────────────────────────── */
+.hero {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  filter: saturate(0.72) contrast(1.05);
+  transform: scale(1.06);
+  animation: heroDrift 24s var(--ease) forwards;
+}
+@keyframes heroDrift {
+  to { transform: scale(1); }
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse 74% 62% at 50% 46%,
+      rgba(13, 17, 17, 0.6),
+      rgba(13, 17, 17, 0) 78%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(13, 17, 17, 0.42) 0%,
+      rgba(13, 17, 17, 0.28) 45%,
+      rgba(13, 17, 17, 0.82) 100%
+    );
+}
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  text-align: center;
+}
+.hero h1 {
+  font-family: var(--display);
+  font-weight: 400;
+  text-transform: uppercase;
+  font-size: clamp(3.25rem, 13vw, 10rem);
+  line-height: 0.86;
+  letter-spacing: -0.05em;
+  margin: 0.75rem 0 0;
+}
+/* The New Abnormal palette across the word. The route matters: teal straight
+   into amber crosses a desaturated sage (#80a66c) that is nowhere in the
+   painting, so the sweep goes through the cover's own bone cream instead —
+   every midpoint then stays on-palette. Amber is the fallback, since with
+   `color: transparent` a dropped gradient would leave the word invisible. */
+.hero h1 em {
+  font-style: normal;
+  color: var(--tna-amber);
+}
+@supports ((background-clip: text) or (-webkit-background-clip: text)) {
+  .hero h1 em {
+    background: linear-gradient(
+      100deg,
+      var(--tna-teal) 0%,
+      var(--tna-sky) 24%,
+      var(--tna-bone) 50%,
+      var(--tna-gold) 76%,
+      var(--tna-amber) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+.hero .eyebrow { color: rgba(237, 237, 236, 0.7); }
+
+.hero-sub {
+  max-width: 46ch;
+  margin: 1.75rem auto 0;
+  color: var(--paper-dim);
+  font-size: clamp(0.95rem, 1.6vw, 1.1rem);
+}
+.hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem 2.25rem;
+  margin-top: 2.5rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--paper-faint);
+}
+
+.scroll-cue {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: clamp(2rem, 5vh, 3rem);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--paper-faint);
+  text-decoration: none;
+}
+.scroll-cue::after {
+  content: '';
+  width: 1px;
+  height: 44px;
+  background: var(--paper-faint);
+  transform-origin: top;
+  animation: cue 2.4s var(--ease) infinite;
+}
+@keyframes cue {
+  0%, 100% { transform: scaleY(0.35); opacity: 0.4; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+@media (max-width: 620px) { .scroll-cue { display: none; } }
+
+/* ── 3D planes (scroll velocity) ─────────────────────────────────────── */
+/* Geometry, perspective and plane size are motion.dev's; the pinning is ours,
+   since the reference is a standalone page that drives itself off the wheel. */
+.planes {
+  position: relative;
+  background: var(--surface-deep);
+  border-block: 1px solid var(--border);
+}
+
+.planes-intro {
+  min-height: 56svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.75rem;
+  padding-block: clamp(2rem, 6vh, 3rem);
+}
+.planes-title {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(36px, 8vw, 72px);
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+  text-transform: uppercase;
+  text-wrap: balance;
+  color: var(--white);
+}
+.planes-count {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+  color: var(--foreground-feint);
+}
+
+/* One viewport to read the section, then a full cycle of the row. The distance
+   tracks SPAN in Planes.jsx at roughly 1.5 carousel-pixels per scroll-pixel, so
+   the row keeps its pace when the plane count changes. */
+.planes-track {
+  position: relative;
+  height: calc(100svh + 2800px);
+}
+.planes-pin {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+}
+
+.planes-viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 2000px;
+  perspective-origin: 10% 10%;
+}
+.planes-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-style: preserve-3d;
+  transform: translateY(100px);
+}
+
+.plane {
+  position: absolute;
+  width: 320px;
+  height: 384px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-style: preserve-3d;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  transition: filter 0.2s ease;
+  cursor: zoom-in;
+}
+.plane-image-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.plane-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.plane-index {
+  position: absolute;
+  top: -24px;
+  left: 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: var(--white);
+}
+
+.label-container {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  margin-left: 12px;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+.label-line {
+  width: 120px;
+  height: 1px;
+  background-color: var(--white);
+  transform-origin: left;
+}
+.label-text {
+  padding: 4px 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--white);
+}
+
+.planes-hint {
+  position: absolute;
+  z-index: 50;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 3vw;
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--white);
+  opacity: 0.7;
+}
+
+/* Fallback: no perspective, no pinning — a swipeable strip of the same frames. */
+.planes-strip {
+  display: flex;
+  gap: 15px;
+  padding: 0 var(--gut) clamp(3rem, 9vh, 5rem);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.planes-strip::-webkit-scrollbar { display: none; }
+.planes-card {
+  flex: 0 0 auto;
+  position: relative;
+  width: min(280px, 78vw);
+  height: 350px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--layer);
+  color: inherit;
+  font: inherit;
+  scroll-snap-align: center;
+  cursor: zoom-in;
+}
+.planes-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.planes-card-name {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 2.5rem 1rem 0.9rem;
+  background: linear-gradient(180deg, transparent, rgba(6, 6, 7, 0.9));
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--white);
+}
+
+/* ── Scroll text lines ──────────────────────────────────────────────── */
+/* Four tickers, each offset by scrollY at its own speed. Sizes, the 2px stroke
+   and the 0.4 outline opacity are the reference's. */
+.text-section {
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-block: clamp(5rem, 16vh, 11rem);
+  border-block: 1px solid var(--border);
+}
+
+.ticker-line {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+.ticker-pair { display: flex; }
+
+.ticker-line span {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(48px, 12vw, 120px);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  padding: 0 20px;
+}
+
+.text-solid { color: var(--white); }
+.text-outline {
+  color: transparent;
+  -webkit-text-stroke: 2px var(--white);
+  opacity: 0.4;
+}
+@media (max-width: 600px) {
+  .text-outline { -webkit-text-stroke: 1px var(--white); }
+}
+
+/* ── Section framing ────────────────────────────────────────────────── */
+.section { padding-block: clamp(4.5rem, 12vh, 9rem); }
+
+.section-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.5rem;
+  margin-bottom: clamp(2.5rem, 6vh, 4rem);
+}
+.section-head h2 {
+  font-family: var(--display);
+  font-weight: 400;
+  text-transform: uppercase;
+  font-size: clamp(2.5rem, 7vw, 4.5rem);
+  line-height: 0.94;
+  letter-spacing: -0.05em;
+  margin: 0.5rem 0 0;
+}
+
+/* ── Filters ────────────────────────────────────────────────────────── */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.filter {
+  appearance: none;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--paper-dim);
+  font: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 0.5rem 1.05rem;
+  cursor: pointer;
+  transition: color 0.25s var(--ease), border-color 0.25s var(--ease),
+    background 0.25s var(--ease);
+}
+.filter:hover { color: var(--paper); border-color: var(--paper-faint); }
+.filter[aria-pressed='true'] {
+  background: var(--paper);
+  border-color: var(--paper);
+  color: var(--ink);
+}
+
+/* ── Gallery ────────────────────────────────────────────────────────── */
+.gallery {
+  columns: 3;
+  column-gap: clamp(0.75rem, 1.6vw, 1.5rem);
+}
+@media (max-width: 1024px) { .gallery { columns: 2; } }
+@media (max-width: 600px) { .gallery { columns: 1; } }
+
+.tile {
+  display: block;
+  width: 100%;
+  break-inside: avoid;
+  margin-bottom: clamp(0.75rem, 1.6vw, 1.5rem);
+  padding: 0;
+  border: 0;
+  background: var(--ink-2);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: zoom-in;
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius);
+}
+.tile-frame {
+  position: relative;
+  overflow: hidden;
+  background: var(--ink-3);
+}
+.tile img {
+  width: 100%;
+  height: auto;
+  transition: transform 1.1s var(--ease), filter 0.6s var(--ease);
+  filter: saturate(0.85);
+}
+.tile:hover img,
+.tile:focus-visible img {
+  transform: scale(1.045);
+  filter: saturate(1);
+}
+
+.tile-caption {
+  position: absolute;
+  inset: auto 0 0 0;
+  z-index: 1;
+  padding: 2.5rem 1.15rem 1.05rem;
+  text-align: center;
+  background: linear-gradient(180deg, transparent, rgba(6, 6, 7, 0.9));
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.45s var(--ease), transform 0.45s var(--ease);
+}
+.tile:hover .tile-caption,
+.tile:focus-visible .tile-caption {
+  opacity: 1;
+  transform: none;
+}
+@media (hover: none) {
+  .tile-caption { opacity: 1; transform: none; }
+}
+.tile-caption strong {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.tile-caption span {
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+}
+
+.gallery-empty {
+  padding: 4rem 0;
+  color: var(--paper-faint);
+  font-size: 0.9rem;
+}
+
+/* ── About ──────────────────────────────────────────────────────────── */
+.about {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(2.5rem, 6vh, 4rem);
+}
+.about-portrait {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--ink-3);
+}
+.about-portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(1) contrast(1.08);
+}
+.about-body {
+  max-width: 58ch;
+  margin-inline: auto;
+  text-align: center;
+}
+
+/* :not(.eyebrow) so the kicker above the copy keeps its own size. */
+.about-body p:not(.eyebrow) {
+  font-size: clamp(1.05rem, 1.7vw, 1.3rem);
+  font-weight: 440;
+  line-height: 1.55;
+  color: var(--foreground);
+  margin: 0 0 1.25rem;
+}
+.about-body p:not(.eyebrow):last-of-type { margin-bottom: 0; }
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2.5rem;
+  margin-top: 2.75rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--line);
+}
+.stat b {
+  display: block;
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(2.25rem, 4.5vw, 3.25rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--accent);
+}
+.stat span {
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--paper-faint);
+}
+
+/* ── Contact ────────────────────────────────────────────────────────── */
+.contact {
+  border-top: 1px solid var(--line);
+  background: var(--ink-2);
+}
+.contact-grid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: clamp(2.5rem, 6vh, 4rem);
+}
+.contact-grid > * { width: 100%; }
+.contact h2 {
+  font-family: var(--display);
+  font-weight: 400;
+  text-transform: uppercase;
+  font-size: clamp(2.5rem, 7.5vw, 5rem);
+  line-height: 0.92;
+  letter-spacing: -0.05em;
+  margin: 0.5rem 0 1.25rem;
+}
+.contact-lede {
+  max-width: 44ch;
+  margin: 0 auto;
+  color: var(--paper-dim);
+}
+.mailto {
+  display: inline-block;
+  margin-top: 2rem;
+  font-family: var(--display);
+  font-weight: 400;
+  text-transform: uppercase;
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  letter-spacing: -0.035em;
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.2rem;
+  transition: border-color 0.3s var(--ease), color 0.3s var(--ease);
+}
+.mailto:hover { color: var(--accent); border-color: var(--accent); }
+
+.detail-list {
+  list-style: none;
+  max-width: 30rem;
+  margin: 0 auto;
+  padding: 0;
+  text-align: left;
+}
+.detail-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.05rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.82rem;
+}
+.detail-list dt,
+.detail-list .k {
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  color: var(--paper-faint);
+}
+.detail-list a { text-decoration: none; }
+.detail-list a:hover { color: var(--accent); }
+
+/* ── Footer reveal ──────────────────────────────────────────────────── */
+/* The content is a lid at z-index 1; the footer sticks underneath at -1 and is
+   uncovered as the lid scrolls away. Structure, sticky trick and the blueberry
+   field are motion.dev's; the copy and type are ours. */
+.page {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  overflow-x: clip;
+  background: var(--background);
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  min-height: 100dvh;
+  width: 100%;
+  overflow-x: clip;
+  background: var(--background);
+}
+
+.reveal-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: -1;
+  width: 100%;
+  overflow-x: clip;
+}
+
+.footer-fade {
+  --footer-field: oklch(0.68 0.18 255);
+  --footer-ink: oklch(0.145 0.01 148);
+  --footer-ink-feint: color-mix(in srgb, var(--footer-ink) 62%, transparent);
+  --footer-rule: color-mix(in srgb, var(--footer-ink) 18%, transparent);
+
+  width: 100%;
+  overflow-x: clip;
+  background: var(--footer-field);
+  color: var(--footer-ink);
+}
+.footer-scale { width: 100%; }
+
+.footer-inner {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 72px 28px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 48px;
+}
+
+.footer-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 46ch;
+  padding-bottom: 40px;
+  border-bottom: 1px solid var(--footer-rule);
+}
+.footer-wordmark {
+  font-family: var(--display);
+  font-size: clamp(2rem, 6vw, 3.25rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  color: var(--footer-ink);
+}
+.footer-brand p {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.45;
+  text-wrap: pretty;
+  color: var(--footer-ink-feint);
+}
+
+.footer-cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 32px;
+  width: 100%;
+  padding-bottom: 40px;
+  border-bottom: 1px solid var(--footer-rule);
+}
+.footer-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.footer-col h3 {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--footer-ink-feint);
+}
+.footer-col ul,
+.footer-legal ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.footer-col a,
+.footer-legal a {
+  color: var(--footer-ink);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 560;
+}
+.footer-col a:hover,
+.footer-legal a:hover {
+  color: color-mix(in srgb, var(--footer-ink) 70%, white);
+}
+
+.footer-legal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px 24px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--footer-ink-feint);
+}
+.footer-legal a {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.footer-legal ul {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 24px;
+}
+
+@media (max-width: 640px) {
+  .footer-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .footer-inner { padding: 56px 20px 40px; gap: 36px; }
+}
+
+/* ── Lightbox ───────────────────────────────────────────────────────── */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  background: rgba(6, 6, 7, 0.97);
+  backdrop-filter: blur(8px);
+  animation: fade 0.3s var(--ease);
+}
+@keyframes fade { from { opacity: 0; } }
+
+.lb-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem var(--gut);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--paper-faint);
+}
+.lb-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  padding: 0 clamp(1rem, 5vw, 5rem);
+}
+.lb-stage img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: var(--radius);
+  animation: pop 0.45s var(--ease);
+}
+@keyframes pop {
+  from { opacity: 0; transform: scale(0.985); }
+}
+.lb-foot {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.4rem;
+  padding: 1.25rem var(--gut) 2rem;
+}
+.lb-foot h3 {
+  font-family: var(--display);
+  font-weight: 400;
+  text-transform: uppercase;
+  font-size: clamp(1.5rem, 3.5vw, 2.25rem);
+  letter-spacing: -0.035em;
+  margin: 0;
+}
+.lb-foot p {
+  margin: 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--paper-faint);
+}
+
+.lb-btn {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: rgba(19, 24, 26, 0.72);
+  color: var(--paper);
+  cursor: pointer;
+  transition: border-color 0.25s var(--ease), background 0.25s var(--ease);
+}
+.lb-btn:hover { border-color: var(--accent); background: var(--ink-3); }
+.lb-btn:disabled { opacity: 0.25; cursor: default; }
+
+.lb-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+}
+.lb-nav.prev { left: clamp(0.5rem, 2vw, 1.75rem); }
+.lb-nav.next { right: clamp(0.5rem, 2vw, 1.75rem); }
+
+.lb-close {
+  width: auto;
+  border-radius: 999px;
+  padding-inline: 1.1rem;
+  gap: 0.6rem;
+  font: inherit;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+}

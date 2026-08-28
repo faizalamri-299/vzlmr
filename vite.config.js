@@ -3,9 +3,11 @@ import { defineConfig } from 'vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  // The site is served from https://faizalamri-299.github.io/vzlmr/, so every
-  // asset URL has to be prefixed with the repo name. Without this the built
-  // index.html asks for /assets/... at the domain root and gets a 404 — blank page.
-  base: '/vzlmr/',
+  // Served from the custom domain https://vzlmr.com/ — i.e. the domain root, so
+  // asset URLs must NOT be prefixed with the repo name. This was '/vzlmr/' while
+  // the site lived at faizalamri-299.github.io/vzlmr/; if the custom domain ever
+  // goes away, it has to go back, or every /assets/... request 404s and the page
+  // renders blank.
+  base: '/',
   plugins: [react()],
 })

@@ -19,13 +19,11 @@ export default function Hero() {
           <em>still</em>
         </h1>
         <p className="hero-sub">
-          Landscape, portrait and street work from Faizal Amri &mdash; made on
-          long walks, slow mornings and the occasional very bad idea.
+          Landscape, portrait and street work. <br/>
+            Made on long walks, slow mornings and the occasional very bad idea.
         </p>
         <div className="hero-meta">
-          <span>Kuala Lumpur</span>
-          <span>Available for commissions</span>
-          <span>Prints on request</span>
+          <span>Kuala Lumpur, Malaysia</span>
         </div>
       </div>
 

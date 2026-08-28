@@ -3,3 +3,8 @@ dist
 .idea
 .DS_Store
 *.local
+
+# Your global gitignore (~/.gitignore_global) has a bare `data` pattern, which
+# matches any directory named `data` at any depth — it silently swallowed
+# src/data/photos.js, the photo manifest four components import. Keep this.
+!src/data/

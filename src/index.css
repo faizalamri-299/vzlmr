@@ -132,6 +132,7 @@ a { color: inherit; }
 .eyebrow,
 .nav a,
 .hero-meta,
+.about-meta,
 .scroll-cue,
 .filter,
 .tile-caption span,
@@ -762,6 +763,19 @@ a { color: inherit; }
   margin: 0 0 1.25rem;
 }
 .about-body p:not(.eyebrow):last-of-type { margin-bottom: 0; }
+
+/* Replaces the old .stats block below the About copy, and inherits its rule as
+   the separator between the prose and the services line. Matches .hero-meta's
+   treatment; a div rather than a p, see About.jsx. */
+.about-meta {
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--paper-faint);
+}
 
 .stats {
   display: flex;

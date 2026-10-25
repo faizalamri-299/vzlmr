@@ -121,7 +121,6 @@ a { color: inherit; }
 }
 
 /* Centred text reads badly with a one-word last line. */
-.hero-sub,
 .reel-title,
 .reel-lede,
 .section-head h2,
@@ -255,8 +254,6 @@ a { color: inherit; }
    viewport, laid straight over the photographs. No vignette, no soft focus:
    the frames are dimmed evenly and the type does the shouting. */
 .hero {
-  /* The wordmark band's height; the wall fills the rest of the screen. */
-  --band: clamp(7rem, 24svh, 15rem);
   position: relative;
   height: 100svh;
   min-height: 520px;
@@ -271,7 +268,7 @@ a { color: inherit; }
    counted, so the key frame lands at 0, edge to edge. */
 .sheet {
   position: absolute;
-  inset: 0 0 var(--band);
+  inset: 0;
   display: grid;
   grid-template-columns: 1fr 1fr 1.5fr 1fr 1fr;
   grid-template-rows: repeat(3, 1fr);
@@ -282,7 +279,6 @@ a { color: inherit; }
   gap: 2px;
 }
 .sheet.is-final {
-  bottom: 0;
   left: -50vw;
   right: -50vw;
   grid-template-columns:
@@ -324,33 +320,26 @@ a { color: inherit; }
   outline-offset: -2px;
 }
 
-/* The wordmark's own band under the wall, so it covers no photograph. One
-   line set to the band's height, sitting on its floor; the line clips its
-   glyphs so the load can raise them up out of nowhere. The zoom slides the
-   band off the bottom. */
-.hero-band {
+/* One line laid over the wall at the bottom centre, sized to cover little of
+   it. The line clips its glyphs so the load can raise them up out of nowhere;
+   the zoom moves the mark itself, so it is centred with text-align rather
+   than a transform GSAP would overwrite. Clicks pass through to the frames. */
+.hero-mark {
   position: absolute;
   z-index: 2;
   left: 0;
   right: 0;
-  bottom: 0;
-  height: var(--band);
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 2rem;
-  padding: 0 clamp(4.5rem, 8vw, 7rem) 0 var(--gut);
-  background: var(--background);
-}
-.hero-mark {
-  margin: 0 0 -0.06em -0.04em;
+  bottom: clamp(0.75rem, 3svh, 2rem);
+  margin: 0;
+  text-align: center;
   font-family: var(--display);
   font-weight: 400;
-  font-size: calc(var(--band) * 1.12);
+  font-size: min(28svh, 30vw);
   line-height: 0.8;
   letter-spacing: -0.04em;
   text-transform: uppercase;
   color: var(--bone);
+  pointer-events: none;
 }
 .hero-mark-line {
   display: block;
@@ -360,15 +349,6 @@ a { color: inherit; }
   padding-top: 0.06em;
 }
 .hero-mark-line > span { display: block; }
-
-.hero-sub {
-  margin: 0 0 clamp(1rem, 3svh, 1.75rem);
-  max-width: 24ch;
-  font-size: 0.95rem;
-  text-align: right;
-  color: var(--bone);
-  opacity: 0.8;
-}
 
 /* Shown once the key frame fills the screen; the zoom fades it in. A solid
    ink label rather than type straight on the photo, which is unreadable the
@@ -413,10 +393,7 @@ a { color: inherit; }
     right: -25vw;
     grid-template-columns: calc(25vw - 2px) 100vw calc(25vw - 2px);
   }
-  /* Too narrow for the line beside the name: the name takes the band. */
-  .hero { --band: 9rem; }
-  .hero-band { padding-right: var(--gut); }
-  .hero-sub { display: none; }
+  .hero-mark { font-size: 40vw; }
 }
 
 /* ── Section rail ─────────────────────────────────────────────────────── */

@@ -227,7 +227,7 @@ App.jsx          owns viewer state + contentRef (the footer watches it)
                  the hero's giant one has gone (.is-past-hero)
   Rail           fixed section scale, right edge; ticks at true page positions
   main.content   ← opaque lid; the footer is revealed from under this
-    Hero         bento wall + wordmark band; pinned, scrubbed Flip zoom
+    Hero         bento wall + wordmark over it; pinned, scrubbed Flip zoom
     Planes       3D velocity carousel (see §3)
     Gallery      filterable masonry; the accessible route to every photo
     TextLines    categories band: four centred words, scrub-brightened
@@ -310,11 +310,12 @@ Decisions the user made explicitly. Don't quietly reverse them.
   hard 2px gutters, mono labels. The gallery grid and the footer are still the earlier
   design (the footer deliberately: the user liked its reveal, and jemputlah records that a
   giant name closing the footer was something they found off).
-- **The wordmark must not cover the photos.** The user disliked the "Light, held still"
-  tagline and found the two-line VZL/MR over the wall hid most of it. Now the wall stops
-  above a solid band (`--band` on `.hero`) holding VZLMR on one line plus the descriptor;
-  `.sheet.is-final` resets `bottom: 0` so the zoom still ends full-screen, and the zoom
-  slides the band off (`yPercent: 100`). Don't put type back over the wall.
+- **The wordmark: one line, bottom centre, over the wall.** The user disliked the "Light,
+  held still" tagline and found the two huge VZL/MR lines over the left of the wall hid
+  most of it. A solid band under the wall with the name in it was tried next and rejected
+  ("dont like that font there"); they asked for it "like before", over the photos, but at
+  the middle bottom. So: `.hero-mark` is one line, `min(28svh, 30vw)`, centred, no
+  backing and no tagline. The zoom fades it down and out.
 - *(Earlier, now superseded on the first screen:)* **simple and minimalist**, and
   **everything centred** — hero, section heads, About, Contact, footer columns.
 - Likes the motion.dev house style; asked for it specifically over earlier work.

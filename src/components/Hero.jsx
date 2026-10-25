@@ -4,15 +4,16 @@ import { Flip, gsap, ScrollTrigger, useGSAP } from '../lib/gsap'
 
 /**
  * The first screen is a contact sheet laid out as a bento wall, with the
- * wordmark on one line in a solid band underneath (after
- * fudo.tree-public-squares.com, the user's reference). It used to sit over the
- * photographs with a tagline; the user found it covered too much of them.
+ * wordmark on one line laid over the photographs at the bottom centre (after
+ * fudo.tree-public-squares.com, the user's reference). It began as two huge
+ * lines over the left of the wall with a tagline, which hid too much of the
+ * photos, then sat in a solid band underneath, which the user disliked.
  *
  * Scrolling holds the screen and zooms into the key frame, after GSAP's
  * "Scrubbed bento gallery" demo: Flip records the wall's final layout (the key
  * frame spanning the viewport, its neighbours pushed out past the edges) and
- * the scroll scrubs from the bento to that. The band drops away on the way, so
- * the key frame ends full-screen, and its caption arrives once it does.
+ * the scroll scrubs from the bento to that. The wordmark drops away on the way,
+ * and the key frame's caption arrives once it fills the screen.
  *
  * The frames are real buttons into the lightbox, so the wall is a way in to the
  * work rather than a backdrop.
@@ -44,8 +45,8 @@ export default function Hero({ onOpen }) {
       mm.add('(prefers-reduced-motion: no-preference)', () => {
         // The page's one unprompted moment: frames develop in at random, then
         // the wordmark rises into place. Runs before first paint, so nothing
-        // flashes. It moves the band's contents, never the band itself, which
-        // the zoom moves: one property, one owner.
+        // flashes. It moves the line's glyphs, never the mark itself, which the
+        // zoom moves: one property, one owner.
         gsap
           .timeline({ defaults: { ease: 'power3.out' } })
           .from(frames, { opacity: 0, duration: 0.9, stagger: { each: 0.06, from: 'random' } })
@@ -54,7 +55,6 @@ export default function Hero({ onOpen }) {
             { yPercent: 100, duration: 1.2, ease: 'expo.out', stagger: 0.12 },
             0.35,
           )
-          .from('.hero-sub', { opacity: 0, y: 16, duration: 0.8 }, 0.9)
 
         // Flip measures in pixels, so the zoom is rebuilt whenever the width
         // changes (not the height: a phone's address bar would rebuild it
@@ -85,9 +85,7 @@ export default function Hero({ onOpen }) {
                 Flip.to(final, { duration: 1, ease: 'power1.inOut', simple: true, absolute: true }),
                 0,
               )
-              // The final layout is full height, so the band has to clear the
-              // bottom edge before the key frame reaches it.
-              .to('.hero-band', { yPercent: 100, duration: 0.5, ease: 'power2.in' }, 0)
+              .to('.hero-mark', { yPercent: 60, opacity: 0, duration: 0.4, ease: 'power2.in' }, 0)
               .to('.is-key .sheet-shade', { opacity: 0, duration: 0.6 }, 0.2)
               .fromTo(
                 '.hero-focus',
@@ -150,15 +148,12 @@ export default function Hero({ onOpen }) {
         ))}
       </div>
 
-      <div className="hero-band">
-        {/* Lowercase in the source and uppercased by CSS, like every wordmark here. */}
-        <h1 className="hero-mark" aria-label="vzlmr, photography by Faizal Amri">
-          <span className="hero-mark-line" aria-hidden="true">
-            <span>vzlmr</span>
-          </span>
-        </h1>
-        <p className="hero-sub">City, sky and street photography from Kuala Lumpur.</p>
-      </div>
+      {/* Lowercase in the source and uppercased by CSS, like every wordmark here. */}
+      <h1 className="hero-mark" aria-label="vzlmr, photography by Faizal Amri">
+        <span className="hero-mark-line" aria-hidden="true">
+          <span>vzlmr</span>
+        </span>
+      </h1>
 
       {/* Hidden until the key frame fills the screen; the zoom brings it in. */}
       <p className="hero-focus" aria-hidden="true">

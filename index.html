@@ -20,6 +20,17 @@
     />
     <meta name="twitter:card" content="summary_large_image" />
 
+    <!-- The hero's key frame (the photo flagged `hero` in src/data/photos.js) is the
+         largest paint. The page renders from JS, so without this the browser only
+         finds the image after the bundle runs. Keep it in step with the manifest. -->
+    <link
+      rel="preload"
+      as="image"
+      href="/photos/merdeka-118-1536.webp"
+      imagesrcset="/photos/merdeka-118-480.webp 480w, /photos/merdeka-118-960.webp 960w, /photos/merdeka-118-1536.webp 1536w"
+      imagesizes="100vw"
+      fetchpriority="high"
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

@@ -60,8 +60,11 @@ function Plane({ index, photo, isHovered, planeRef, onHover, onOpen }) {
         <img
           className="plane-image"
           src={photo.src}
+          srcSet={photo.srcSet}
+          sizes={`${PLANE_WIDTH}px`}
           alt=""
           draggable={false}
+          loading="lazy"
           decoding="async"
         />
       </div>
@@ -207,7 +210,14 @@ export default function Planes({ onOpen }) {
               onClick={() => onOpen(photos, i)}
               aria-label={`Open ${photo.title} at full size`}
             >
-              <img src={photo.src} alt={photo.alt} loading="lazy" decoding="async" />
+              <img
+                src={photo.src}
+                srcSet={photo.srcSet}
+                sizes="(max-width: 720px) 50vw, 25vw"
+                alt={photo.alt}
+                loading="lazy"
+                decoding="async"
+              />
               <span className="planes-card-name">{photo.title}</span>
             </button>
           ))}

@@ -52,6 +52,8 @@ export default function Gallery({ onOpen, active, onActive }) {
               <span className="tile-frame">
                 <img
                   src={photo.src}
+                  srcSet={photo.srcSet}
+                  sizes="(max-width: 600px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   alt={photo.alt}
                   width={photo.width}
                   height={photo.height}

@@ -19,8 +19,11 @@ A single-page photography portfolio for **vzlmr** (Faizal Amri, Kuala Lumpur).
 Sections in order: Hero → Planes (3D surf) → Gallery grid → categories band → About →
 Contact, then a footer that is revealed from underneath the page.
 
-**The photos are the author's own**, from https://vsco.co/faizalamri-/gallery, in
-`public/photos/` (re-saved with Pillow so no EXIF/GPS ships). The user chose the
+**The photos are the author's own**, from https://vsco.co/faizalamri-/gallery. The
+full-size JPEG masters live in `photos-src/`; `python scripts/photos.py` writes 480,
+960 and full-width (≤1536) WebP copies to `public/photos/`, without EXIF/GPS. Only the
+WebPs ship. `photo(name, width)` in the manifest builds `src` + `srcSet` from those same
+widths, and every `<img>` passes its own `sizes`. The user chose the
 categories City / Sky / Wildlife / Street to fit them, and Merdeka 118 as the hero.
 In `src/data/photos.js`, `hero: true` marks the hero's key frame and `about: true` the
 About image; each category row's cover is that category's first photo. Titles and
@@ -317,10 +320,13 @@ Roughly in priority order:
 
 1. **Only 10 photos, all portrait** (§1). The four 2023 uploads would not download, and
    Street has one photo. Add more to `public/photos/` and the manifest.
-2. **Image delivery.** No `srcset`/`sizes` anywhere. Plane images have no `loading`
-   attribute, so all ten fetch eagerly below the fold, and no `width`/`height`. Gallery
-   tiles *do* lazy-load. With real photos this is the difference between a fast page and
-   a very heavy one.
+2. **Image delivery** is done: responsive WebP plus `sizes` everywhere, lazy reel and
+   below-fold images, and the hero key frame preloaded from `index.html` with
+   `fetchpriority="high"`. **That preload is hard-coded to merdeka-118**, so change it
+   with the `hero` flag. Measured over CDP with the cache off: the first screen went from
+   3.7MB of JPEG (every photo at full size, on any device) to 435KB at 1440×900 and
+   1.37MB on a 3× phone. LCP in local headless is dominated by the hero intro timeline,
+   not bytes, so don't read much into it.
 3. ~~Reduced-motion half-covered~~ — done: the footer and categories band use
    `gsap.matchMedia`, so under `reduce` they render static and fully visible.
 4. **No tests.** The scroll geometry is the thing worth pinning, especially the §3

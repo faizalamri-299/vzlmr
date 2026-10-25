@@ -66,7 +66,14 @@ export default function TextLines({ onPick }) {
           aria-label={`Show ${row.count} ${row.label.toLowerCase()} photographs in the archive`}
         >
           <span className="cat-media" aria-hidden="true">
-            <img src={row.cover.src} alt="" loading="lazy" decoding="async" />
+            <img
+              src={row.cover.src}
+              srcSet={row.cover.srcSet}
+              sizes="100vw"
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
           </span>
           <span className="cat-word">{row.label}</span>
           <span className="cat-count">

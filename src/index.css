@@ -1269,6 +1269,10 @@ a { color: inherit; }
 .lb-stage {
   position: relative;
   display: grid;
+  /* A definite track, so the image's max-height: 100% resolves against the
+     space left between the bar and the caption. With the default auto track
+     it resolves to nothing and a tall photo pushed the caption off screen. */
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
   place-items: center;
   min-height: 0;
   padding: 0 clamp(1rem, 5vw, 5rem);
@@ -1306,6 +1310,13 @@ a { color: inherit; }
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--paper-faint);
+}
+
+/* Phones on their side: give the photo the height the bar and caption take. */
+@media (max-height: 500px) {
+  .lb-bar { padding-block: 0.5rem; }
+  .lb-foot { flex-direction: row; justify-content: center; gap: 1rem; padding-block: 0.5rem 0.75rem; }
+  .lb-foot h3 { font-size: 1.25rem; }
 }
 
 .lb-btn {

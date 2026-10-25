@@ -64,7 +64,14 @@ export default function About() {
   return (
     <section className="about" id="about" ref={sectionRef}>
       <div className="about-frame">
-        <img src={portrait.src} alt={portrait.alt} loading="lazy" decoding="async" />
+        <img
+          src={portrait.src}
+          srcSet={portrait.srcSet}
+          sizes="(max-width: 720px) 100vw, 42vw"
+          alt={portrait.alt}
+          loading="lazy"
+          decoding="async"
+        />
       </div>
 
       <div className="about-body">

@@ -133,7 +133,13 @@ export default function Lightbox({ items, index, onClose, onIndex }) {
           <Chevron dir="prev" />
         </button>
 
-        <img key={photo.id} src={photo.src} alt={photo.alt} />
+        <img
+          key={photo.id}
+          src={photo.src}
+          srcSet={photo.srcSet}
+          sizes="(max-width: 720px) 100vw, 60vh"
+          alt={photo.alt}
+        />
 
         <button
           type="button"

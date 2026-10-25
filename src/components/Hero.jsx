@@ -139,11 +139,13 @@ export default function Hero({ onOpen }) {
           >
             <img
               src={photo.src}
+              srcSet={photo.srcSet}
+              sizes={i === 0 ? '100vw' : '(max-width: 720px) 34vw, 33vw'}
               alt=""
               width={photo.width}
               height={photo.height}
               decoding="async"
-              fetchPriority={i < 5 ? 'high' : 'auto'}
+              fetchPriority={i === 0 ? 'high' : 'auto'}
             />
             <span className="sheet-shade" aria-hidden="true" />
           </button>

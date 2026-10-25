@@ -1,14 +1,25 @@
 /**
  * The photo manifest. This is the only file you need to touch to change the gallery.
  *
- * To use your own images:
- *   1. Drop the files into `public/photos/` (e.g. public/photos/merdeka-118.jpg)
- *   2. Set `src` to "/photos/merdeka-118.jpg"
- *   3. Set `width`/`height` to the image's real pixel dimensions — the grid uses
- *      them to reserve space before the image loads, which stops the layout jumping.
+ * To add a photo:
+ *   1. Drop the full-size JPEG into `photos-src/` (e.g. photos-src/merdeka-118.jpg)
+ *   2. Run `python scripts/photos.py` to build its WebP sizes into public/photos/
+ *   3. Add an entry with `...photo('merdeka-118', width)` and set `width`/`height` to
+ *      the master's real pixel dimensions — the grid uses them to reserve space
+ *      before the image loads, which stops the layout jumping.
  *
  * Photos are the author's own, from VSCO, re-saved without their metadata.
  */
+
+// The widths scripts/photos.py writes: 480, 960 and the master's own width up
+// to 1536. Every <img> gets the srcset and picks a size from its `sizes`.
+const photo = (name, width) => {
+  const widths = [480, 960, Math.min(1536, width)]
+  return {
+    src: `/photos/${name}-${widths[2]}.webp`,
+    srcSet: widths.map((w) => `/photos/${name}-${w}.webp ${w}w`).join(', '),
+  }
+}
 
 export const categories = [
   { id: 'all', label: 'All' },
@@ -23,7 +34,7 @@ export const categories = [
 export const photos = [
   {
     id: 'merdeka',
-    src: '/photos/merdeka-118.jpg',
+    ...photo('merdeka-118', 1536),
     width: 1536,
     height: 2048,
     alt: 'Merdeka 118 rising into a broken sky above the evening traffic',
@@ -35,7 +46,7 @@ export const photos = [
   },
   {
     id: 'concorde',
-    src: '/photos/concorde.jpg',
+    ...photo('concorde', 1536),
     width: 1536,
     height: 2048,
     alt: 'Hotel and office towers converging overhead',
@@ -46,7 +57,7 @@ export const photos = [
   },
   {
     id: 'balcony',
-    src: '/photos/balcony.jpg',
+    ...photo('balcony', 1536),
     width: 1536,
     height: 2048,
     alt: 'The city skyline with the Petronas Towers seen from a high balcony',
@@ -58,7 +69,7 @@ export const photos = [
   },
   {
     id: 'mosque',
-    src: '/photos/floating-mosque.jpg',
+    ...photo('floating-mosque', 1366),
     width: 1366,
     height: 2048,
     alt: 'A white mosque and its minaret reflected in still water',
@@ -69,7 +80,7 @@ export const photos = [
   },
   {
     id: 'flight-path',
-    src: '/photos/flight-path.jpg',
+    ...photo('flight-path', 1366),
     width: 1366,
     height: 2048,
     alt: 'A plane crossing a deep blue sky between power lines and a flagpole',
@@ -80,7 +91,7 @@ export const photos = [
   },
   {
     id: 'under-clouds',
-    src: '/photos/under-clouds.jpg',
+    ...photo('under-clouds', 1366),
     width: 1366,
     height: 2048,
     alt: 'A plane passing under a field of small clouds',
@@ -91,7 +102,7 @@ export const photos = [
   },
   {
     id: 'flag',
-    src: '/photos/jalur-gemilang.jpg',
+    ...photo('jalur-gemilang', 1366),
     width: 1366,
     height: 2048,
     alt: 'The Malaysian flag flying against a clear blue sky',
@@ -102,7 +113,7 @@ export const photos = [
   },
   {
     id: 'parakeet',
-    src: '/photos/parakeet.jpg',
+    ...photo('parakeet', 1366),
     width: 1366,
     height: 2048,
     alt: 'A ring-necked parakeet perched on a branch, its long tail hanging down',
@@ -113,7 +124,7 @@ export const photos = [
   },
   {
     id: 'grey',
-    src: '/photos/african-grey.jpg',
+    ...photo('african-grey', 1366),
     width: 1366,
     height: 2048,
     alt: 'An African grey parrot looking down from a branch',
@@ -124,7 +135,7 @@ export const photos = [
   },
   {
     id: 'pole',
-    src: '/photos/jawi-pole.jpg',
+    ...photo('jawi-pole', 1536),
     width: 1536,
     height: 2048,
     alt: 'Lines of Jawi handwriting on a lamp post beside a busy road',

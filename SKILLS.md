@@ -31,6 +31,13 @@ locations are inferred from the pictures: "Floating Mosque, Kuala Terengganu" is
 guess the user hasn't confirmed. Years are the VSCO upload dates (from the media id's
 ObjectId timestamp), not capture dates.
 
+**Instagram (https://www.instagram.com/vzlmr) has more and better shots** (macaw,
+tiger, cat, the mosque at night). Logged out it serves only 640px thumbnails with signed
+URLs (resizing the `stp` param gets 403) and post pages show nothing, so the user saved
+the originals (1440px, `<id>_n.jpg`) to `C:\Users\am\Downloads\vzlmr`. That's where
+the Instagram masters in `photos-src/` came from. Petronas at night is only 720px even
+there, so it is kept out of the hero, reel and covers.
+
 **Getting more from VSCO:** plain `curl` gets 403 from both vsco.co and im.vsco.co
 (Cloudflare). Load the gallery in headless Chrome over CDP and read the `img` srcs
 (`im.vsco.co/.../<file>.jpg?w=480`), then navigate the same tab to each URL with
@@ -318,8 +325,9 @@ constraint behind a number. Match that.
 
 Roughly in priority order:
 
-1. **Only 10 photos, all portrait** (§1). The four 2023 uploads would not download, and
-   Street has one photo. Add more to `public/photos/` and the manifest.
+1. **19 photos, no capture dates** (§1). Years are VSCO upload / Instagram post dates.
+   Titles and places are inferred; "Shah Alam" (moonlit mosque) and "Kuala Terengganu"
+   (floating mosque) are unconfirmed guesses.
 2. **Image delivery** is done: responsive WebP plus `sizes` everywhere, lazy reel and
    below-fold images, and the hero key frame preloaded from `index.html` with
    `fetchpriority="high"`. **That preload is hard-coded to merdeka-118**, so change it

@@ -3,7 +3,8 @@
     python scripts/photos.py
 
 Each master becomes <name>-480.webp, <name>-960.webp and <name>-<full>.webp, where
-<full> is the master's own width capped at 1536. src/data/photos.js builds the
+<full> is the master's own width capped at 1536; steps at or above a small master's
+width are skipped rather than upscaled. src/data/photos.js builds the
 srcset from the same widths, so keep WIDTHS and MAX in step with its `photo()` helper.
 Re-saving also drops EXIF/GPS from what ships.
 """
@@ -19,7 +20,7 @@ out.mkdir(parents=True, exist_ok=True)
 
 for master in sorted(src.glob('*.jpg')):
     im = Image.open(master).convert('RGB')
-    for w in (*WIDTHS, min(MAX, im.width)):
+    for w in (*(w for w in WIDTHS if w < im.width), min(MAX, im.width)):
         h = round(im.height * w / im.width)
         dest = out / f'{master.stem}-{w}.webp'
         im.resize((w, h), Image.LANCZOS).save(dest, 'WEBP', quality=78, method=6)

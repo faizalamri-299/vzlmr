@@ -207,6 +207,31 @@ when the row and wave are at rest. Hover lift is one `quickTo` per plane.
   pads the mask so League Gothic's caps and the @ aren't clipped at line-height 0.85.
 - `--bone` is now a `:root` token for type laid over photographs.
 
+### Mount-time measurement — two races that broke in-app browsers (Oct 2026)
+
+Reported from Instagram's in-app browser: hero "messed up", category rows never
+opening. Both were races that a fast desktop Chrome usually wins:
+
+- **Unstyled mount (WebKit).** Vite links the stylesheet after the module script,
+  and WebKit (every iPhone in-app browser) can run the module before the sheet
+  applies, even while `link.sheet` is already non-null. Flip then records the
+  frames at their natural photo size (key frame 1382px wide on a 390px phone) and
+  bakes that in as inline styles. `main.jsx` mounts only once `--bone` resolves on
+  `:root` (capped at 10s). Don't revert to checking `link.sheet`; it lies in WebKit.
+- **Reel shrinking after ScrollTrigger measured.** `useMediaQuery` used to start
+  `false`, so on phones the reel mounted in its 3838px desktop form and then
+  swapped to the 784px strip. When the last refresh landed before the swap, every
+  trigger below it (categories, About, Contact) sat ~3000px too low; the first
+  category rows were past the max scroll and stayed clipped shut. The hook now
+  answers on first render. Any component whose height depends on JS state must
+  have its final height at mount, or call `ScrollTrigger.refresh()` after changing.
+
+Test both in WebKit, not only Chrome: Playwright's WebKit runs on Windows
+(`npm i playwright` in the scratchpad, `npx playwright install webkit`), with an
+Instagram iPhone UA, `isMobile`, and `page.route` delaying the `.css` to force the
+first race. Read `ScrollTrigger.getAll()` start/end against real element tops via
+a debug build that sets `window.__ST`, never the shipped one.
+
 ### Type traps
 
 - **League Gothic has no italic.** The hero's `<em>` is restyled, never italicised.

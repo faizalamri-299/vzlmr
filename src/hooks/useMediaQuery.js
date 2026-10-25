@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react'
 
+const matchesNow = (query) => window.matchMedia?.(query).matches ?? false
+
 /**
  * Reports whether a media query currently matches, and keeps reporting as the
- * window changes. Starts `false` so the first paint matches the "no JS yet"
- * markup, then settles on the real answer in the effect.
+ * window changes. Answers on the first render: the page ships an empty root,
+ * so there is no server markup to match, and starting `false` let the reel
+ * mount in its 3800px desktop form on phones and then shrink, after
+ * ScrollTrigger had measured, leaving every scene below it ~3000px too low.
  */
 export function useMediaQuery(query) {
-  const [matches, setMatches] = useState(false)
+  const [matches, setMatches] = useState(() => matchesNow(query))
 
   useEffect(() => {
     if (!window.matchMedia) return

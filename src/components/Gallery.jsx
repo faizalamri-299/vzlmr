@@ -1,9 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { categories, photos } from '../data/photos'
 import { useReveal } from '../hooks/useReveal'
 
-export default function Gallery({ onOpen }) {
-  const [active, setActive] = useState('all')
+export default function Gallery({ onOpen, active, onActive }) {
 
   const shown = useMemo(
     () => (active === 'all' ? photos : photos.filter((p) => p.category === active)),
@@ -29,7 +28,7 @@ export default function Gallery({ onOpen }) {
               type="button"
               className="filter"
               aria-pressed={active === c.id}
-              onClick={() => setActive(c.id)}
+              onClick={() => onActive(c.id)}
             >
               {c.label}
             </button>

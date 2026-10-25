@@ -135,6 +135,25 @@ Also required: `.content` must keep an **opaque background**, or the footer show
 through before it is uncovered. It sits at `z-index: 1` over the footer's `z-index: -1`,
 inside `.page` which has `isolation: isolate`.
 
+### Hero — the scrubbed bento zoom
+
+`Hero.jsx` pins the hero for `HOLD = 1.5` viewports and scrubs a Flip from the bento grid
+to `.sheet.is-final`, where the key frame's column is exactly `100vw` and its neighbours
+are pushed past the edges. Each final grid must **sum to its own width including gaps**
+(`calc(25vw - 2px)` columns) or the key frame lands a few pixels off. Flip needs
+`absolute: true`: it grows frames with inline widths, and in grid flow those stretch the
+`1fr` tracks and threw the key frame 708px off course. The key frame is the first
+*landscape* photo in the manifest (a portrait one is upscaled to fill the screen).
+Dimming is a `.sheet-shade` overlay, not a filter, so the key frame's brightening stays on
+the compositor. The zoom is rebuilt on width change only (Flip measures pixels).
+
+The pin adds 1.5 screens of scroll: the rail's triggers use `refreshPriority: -1` so they
+measure after it, and **probes must use `getBoundingClientRect().top + scrollY`**, not
+`offsetTop` (relative to the nearest positioned ancestor; it silently missed the planes).
+
+Lenis (`src/lib/smooth.js`) smooths the wheel, set up as in jemputlah. It is paused while
+the lightbox is open (`App.jsx`), since `overflow: hidden` doesn't stop it.
+
 ### Planes — how the GSAP port maps onto the reference's springs
 
 Motion's chain was scroll → spring → `useVelocity` → per-plane wave spring. In GSAP:
@@ -144,10 +163,19 @@ with a 50ms exponential (the reference's wave spring is near-critically damped a
 in about that). The loop is added only while the track is on screen and skips DOM writes
 when the row and wave are at rest. Hover lift is one `quickTo` per plane.
 
-### Categories band
+### Lower sections (Oct 2026)
 
-Replaced the four-line ticker in Oct 2026 — the user found it off-putting. Four centred
-words, each scrubbed from opacity 0.12 to 1 (plus a small rise) as it crosses mid-screen.
+- **Category index** (`TextLines.jsx`, `.cats`): replaced the ticker, then a plain word
+  stack. One row per category, cover photo behind a giant word; each row's photo wipes
+  open from the middle (clip-path) while the word slides in. Rows are buttons: they set
+  the archive filter, which now lives in `App.jsx`, and glide up to `#work`.
+- **About**: portrait frame wipes up, image drifts inside it (`yPercent` on the img, the
+  clip on the frame: one property, one owner); the statement lights word by word
+  (SplitText words, opacity scrub).
+- **Contact**: the email is the headline at `18vw` (it runs about 4.8em, so that spans
+  the column short of the rail). Letters rise out of SplitText masks; `.split-char-mask`
+  pads the mask so League Gothic's caps and the @ aren't clipped at line-height 0.85.
+- `--bone` is now a `:root` token for type laid over photographs.
 
 ### Type traps
 
@@ -168,10 +196,11 @@ words, each scrubbed from opacity 0.12 to 1 (plus a small rise) as it crosses mi
 
 ```
 App.jsx          owns viewer state + contentRef (the footer watches it)
-  Header         fixed; adds .is-stuck on scroll; carries a scrim so the nav
-                 stays legible over a bright hero photo
+  Header         fixed; adds .is-stuck on scroll; small wordmark shows only once
+                 the hero's giant one has gone (.is-past-hero)
+  Rail           fixed section scale, right edge; ticks at true page positions
   main.content   ← opaque lid; the footer is revealed from under this
-    Hero         centred title screen, radial vignette pooled under the words
+    Hero         bento wall + cropped wordmark; pinned, scrubbed Flip zoom
     Planes       3D velocity carousel (see §3)
     Gallery      filterable masonry; the accessible route to every photo
     TextLines    categories band: four centred words, scrub-brightened
@@ -244,8 +273,18 @@ settled; hover lift is exactly -30px; the footer reveal scrubs opacity 0→1, sc
 
 Decisions the user made explicitly. Don't quietly reverse them.
 
-- **Simple and minimalist**, and **everything centred** — hero, section heads, About,
-  Contact, footer columns. They chose this over the references' left-aligned layout.
+- **Oct 2026: the first screen went brutalist**, at the user's request ("plain and boring"),
+  after `fudo.tree-public-squares.com`: a bento wall of frames on hairline gutters, the
+  wordmark cropped by the viewport over the photos, a mono instrument rail on the right.
+  They also wanted real scroll movement there, pointing at GSAP's "Scrubbed bento gallery"
+  demo and the GSAP work in their `E:/htdocs/jemputlah` project (read its `MOTION.md`; its
+  rules were learned the hard way and apply here). The user then found the category band, About and Contact "boring
+  and plain", so those went the same way: scrubbed scenes, giant type over photographs,
+  hard 2px gutters, mono labels. The gallery grid and the footer are still the earlier
+  design (the footer deliberately: the user liked its reveal, and jemputlah records that a
+  giant name closing the footer was something they found off).
+- *(Earlier, now superseded on the first screen:)* **simple and minimalist**, and
+  **everything centred** — hero, section heads, About, Contact, footer columns.
 - Likes the motion.dev house style; asked for it specifically over earlier work.
 - **Disliked the neon pink→cyan spectrum** on the hero title. Wanted the album palette.
 - Asked for a **smooth gradient**, having found flat per-letter blocks "too cranky".
@@ -272,7 +311,7 @@ Roughly in priority order:
 4. **No tests.** The scroll geometry is the thing worth pinning, especially the §3
    wrap invariant.
 5. **No `og:image` or canonical**, so shared links have no preview.
-6. Bundle is 322KB / 110KB gzip — the GSAP port came out level with Motion
-   (gsap 28KB + ScrollTrigger 18KB gzip). Secondary to (2).
+6. Bundle is 378KB / 129KB gzip: gsap 28KB + ScrollTrigger 18KB + Flip 10KB gzip, plus
+   SplitText and Lenis. Secondary to (2), which matters more now the hero loads nine frames up front.
 7. Open design question: the page is ~10,400px and the surf, the grid and the text band
    all say "here are the categories". Cutting one is the user's call.

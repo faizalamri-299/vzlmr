@@ -19,10 +19,12 @@ A single-page photography portfolio for **vzlmr** (Faizal Amri, Kuala Lumpur).
 Sections in order: Hero → Planes (3D surf) → Gallery grid → categories band → About →
 Contact, then a footer that is revealed from underneath the page.
 
-**The content is placeholder.** `src/data/photos.js` serves seeded picsum URLs, so
-the captions do not describe the images — "First Light, Sossusvlei / Namib Desert" is
-currently a forest stream. The About stats (9 years, 24 countries, 3 published
-series) and "Est. 2016" are invented. Replace the manifest before this goes live;
+**The content is placeholder.** `src/data/photos.js` serves fixed picsum images
+(`/id/N/`), picked by eye from the catalogue so each fits its category, with captions
+rewritten to match. Picking: pull `https://picsum.photos/v2/list` and build labelled
+contact sheets from 240×160 thumbnails, since picsum has no tags or search. Order
+matters: the first landscape-orientation photo becomes the hero's key frame and the
+first portrait photo is the About image. Replace the manifest before this goes live;
 that file's header comment explains the swap.
 
 ---

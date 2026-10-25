@@ -780,6 +780,8 @@ a { color: inherit; }
 
 @media (max-width: 720px) {
   .cat-row { height: 8.5rem; padding-right: var(--gut); }
+  /* The longest word fills the row, so the count moves to the corner. */
+  .cat-count { position: absolute; top: 0.9rem; right: var(--gut); }
   .cat-word { font-size: 19vw; }
 }
 

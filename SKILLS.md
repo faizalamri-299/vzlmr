@@ -19,13 +19,23 @@ A single-page photography portfolio for **vzlmr** (Faizal Amri, Kuala Lumpur).
 Sections in order: Hero → Planes (3D surf) → Gallery grid → categories band → About →
 Contact, then a footer that is revealed from underneath the page.
 
-**The content is placeholder.** `src/data/photos.js` serves fixed picsum images
-(`/id/N/`), picked by eye from the catalogue so each fits its category, with captions
-rewritten to match. Picking: pull `https://picsum.photos/v2/list` and build labelled
-contact sheets from 240×160 thumbnails, since picsum has no tags or search. Order
-matters: the first landscape-orientation photo becomes the hero's key frame and the
-first portrait photo is the About image. Replace the manifest before this goes live;
-that file's header comment explains the swap.
+**The photos are the author's own**, from https://vsco.co/faizalamri-/gallery, in
+`public/photos/` (re-saved with Pillow so no EXIF/GPS ships). The user chose the
+categories City / Sky / Wildlife / Street to fit them, and Merdeka 118 as the hero.
+In `src/data/photos.js`, `hero: true` marks the hero's key frame and `about: true` the
+About image; each category row's cover is that category's first photo. Titles and
+locations are inferred from the pictures: "Floating Mosque, Kuala Terengganu" is a
+guess the user hasn't confirmed. Years are the VSCO upload dates (from the media id's
+ObjectId timestamp), not capture dates.
+
+**Getting more from VSCO:** plain `curl` gets 403 from both vsco.co and im.vsco.co
+(Cloudflare). Load the gallery in headless Chrome over CDP and read the `img` srcs
+(`im.vsco.co/.../<file>.jpg?w=480`), then navigate the same tab to each URL with
+`?w=2400` and save it with `Network.getResponseBody` (2048px on the long side is the
+cap). Some navigations never return a body; retry, and check the result's size, since
+two "successes" were a 64×64 and a 1×1 placeholder. Logged out, the page lists only the
+14 newest uploads and LOAD MORE does nothing; `/api/3.0/medias/profile` needs a token
+(403).
 
 ---
 
@@ -144,8 +154,10 @@ to `.sheet.is-final`, where the key frame's column is exactly `100vw` and its ne
 are pushed past the edges. Each final grid must **sum to its own width including gaps**
 (`calc(25vw - 2px)` columns) or the key frame lands a few pixels off. Flip needs
 `absolute: true`: it grows frames with inline widths, and in grid flow those stretch the
-`1fr` tracks and threw the key frame 708px off course. The key frame is the first
-*landscape* photo in the manifest (a portrait one is upscaled to fill the screen).
+`1fr` tracks and threw the key frame 708px off course. The key frame is the photo
+flagged `hero` (else the first landscape one). A tall photo works, since the frame
+covers the screen and crops to its middle band, but the subject has to sit in that band:
+on Merdeka 118 at 1440×900 the spire's tip is cut and the tower body fills the screen.
 Dimming is a `.sheet-shade` overlay, not a filter, so the key frame's brightening stays on
 the compositor. The zoom is rebuilt on width change only (Flip measures pixels).
 
@@ -258,9 +270,9 @@ It has sharp edges that cost real time to discover:
   seconds — then `--dump-dom`.
 - **`html { scroll-behavior: smooth }` swallows programmatic `scrollTo`.** Set
   `document.documentElement.style.scrollBehavior = 'auto'` first.
-- **picsum is slow and flaky in headless**, and `.plane` has no background of its own,
-  so unloaded images look exactly like a layout bug. For deterministic shots, patch the
-  built bundle's `https://picsum.photos` → a local server that returns generated SVGs.
+- **`.plane` has no background of its own**, so an unloaded image looks exactly like a
+  layout bug. The photos are local now (`public/photos/`), so serving `dist/` locally is
+  deterministic.
 
 Verified after the GSAP port (CDP, 1440 and 390 wide, plus reduced motion) and worth
 not re-deriving: at rest plane transforms match `y = centered × -0.35` /
@@ -303,7 +315,8 @@ constraint behind a number. Match that.
 
 Roughly in priority order:
 
-1. **Placeholder content** (§1) — the biggest gap by far.
+1. **Only 10 photos, all portrait** (§1). The four 2023 uploads would not download, and
+   Street has one photo. Add more to `public/photos/` and the manifest.
 2. **Image delivery.** No `srcset`/`sizes` anywhere. Plane images have no `loading`
    attribute, so all ten fetch eagerly below the fold, and no `width`/`height`. Gallery
    tiles *do* lazy-load. With real photos this is the difference between a fast page and

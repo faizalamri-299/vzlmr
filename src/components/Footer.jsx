@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { gsap, useGSAP } from '../lib/gsap'
 
 const COLUMNS = [
-  { title: 'Work', links: ['Landscape', 'Portrait', 'Street', 'Architecture'] },
+  { title: 'Work', links: ['City', 'Sky', 'Wildlife', 'Street'] },
   { title: 'Studio', links: ['About', 'Prints', 'Commissions', 'Journal'] },
   { title: 'Elsewhere', links: ['Instagram', 'Newsletter', 'Contact'] },
 ]
@@ -61,7 +61,7 @@ export default function Footer({ contentRef }) {
             <div className="footer-brand">
               <span className="footer-wordmark">vzlmr</span>
               <p>
-                Landscape, portrait and street photography from Kuala Lumpur.
+                City, sky and street photography from Kuala Lumpur.
                 Commissions, editorial work and prints.
               </p>
             </div>

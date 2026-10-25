@@ -13,7 +13,7 @@ const SERVICES = ['Commissions', 'Editorial', 'Prints']
  */
 export default function About() {
   const sectionRef = useRef(null)
-  const portrait = photos.find((p) => p.category === 'portrait') ?? photos[0]
+  const portrait = photos.find((p) => p.about) ?? photos[0]
 
   useGSAP(
     () => {
@@ -64,14 +64,14 @@ export default function About() {
   return (
     <section className="about" id="about" ref={sectionRef}>
       <div className="about-frame">
-        <img src={portrait.src} alt="Faizal Amri at work" loading="lazy" decoding="async" />
+        <img src={portrait.src} alt={portrait.alt} loading="lazy" decoding="async" />
       </div>
 
       <div className="about-body">
         <p className="about-label">About</p>
         <p className="about-statement">{STATEMENT}</p>
         <p className="about-lede">
-          Landscape, portrait and street photography, based in Kuala Lumpur.
+          City, sky and street photography, based in Kuala Lumpur.
         </p>
         <ul className="about-services" aria-label="Services">
           {SERVICES.map((s) => (

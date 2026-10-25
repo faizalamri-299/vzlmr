@@ -19,10 +19,11 @@ import { Flip, gsap, ScrollTrigger, useGSAP } from '../lib/gsap'
 
 /**
  * Nine frames; the first is the key frame at the centre (`h` in both grids).
- * It ends up filling a landscape screen, so it is the first landscape photo in
- * the manifest: a portrait one would be cropped to a strip and upscaled.
+ * It ends up filling a landscape screen, so it is the photo flagged `hero` in the
+ * manifest; a tall one is cropped to its middle band, so pick one whose subject
+ * sits there. Without a flag it falls back to the first landscape photo.
  */
-const KEY = photos.find((p) => p.width > p.height) ?? photos[0]
+const KEY = photos.find((p) => p.hero) ?? photos.find((p) => p.width > p.height) ?? photos[0]
 const FRAMES = [KEY, ...photos.filter((p) => p !== KEY)].slice(0, 9)
 const AREAS = ['h', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'i']
 
@@ -164,7 +165,7 @@ export default function Hero({ onOpen }) {
           Light, held <em>still</em>
         </p>
         <p className="hero-sub">
-          Landscape, portrait and street photography from Kuala Lumpur.
+          City, sky and street photography from Kuala Lumpur.
         </p>
       </div>
 

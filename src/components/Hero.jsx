@@ -4,14 +4,15 @@ import { Flip, gsap, ScrollTrigger, useGSAP } from '../lib/gsap'
 
 /**
  * The first screen is a contact sheet laid out as a bento wall, with the
- * wordmark set big enough to be cropped by the viewport and laid straight over
- * the photographs (after fudo.tree-public-squares.com, the user's reference).
+ * wordmark on one line in a solid band underneath (after
+ * fudo.tree-public-squares.com, the user's reference). It used to sit over the
+ * photographs with a tagline; the user found it covered too much of them.
  *
  * Scrolling holds the screen and zooms into the key frame, after GSAP's
  * "Scrubbed bento gallery" demo: Flip records the wall's final layout (the key
  * frame spanning the viewport, its neighbours pushed out past the edges) and
- * the scroll scrubs from the bento to that. The wordmark splits off both sides
- * on the way, and the key frame's caption arrives once it fills the screen.
+ * the scroll scrubs from the bento to that. The band drops away on the way, so
+ * the key frame ends full-screen, and its caption arrives once it does.
  *
  * The frames are real buttons into the lightbox, so the wall is a way in to the
  * work rather than a backdrop.
@@ -43,8 +44,8 @@ export default function Hero({ onOpen }) {
       mm.add('(prefers-reduced-motion: no-preference)', () => {
         // The page's one unprompted moment: frames develop in at random, then
         // the wordmark rises into place. Runs before first paint, so nothing
-        // flashes. It moves the caption's children, never the caption itself,
-        // which the zoom fades: one property, one owner.
+        // flashes. It moves the band's contents, never the band itself, which
+        // the zoom moves: one property, one owner.
         gsap
           .timeline({ defaults: { ease: 'power3.out' } })
           .from(frames, { opacity: 0, duration: 0.9, stagger: { each: 0.06, from: 'random' } })
@@ -53,7 +54,7 @@ export default function Hero({ onOpen }) {
             { yPercent: 100, duration: 1.2, ease: 'expo.out', stagger: 0.12 },
             0.35,
           )
-          .from('.hero-caption > *', { opacity: 0, y: 16, duration: 0.8, stagger: 0.08 }, 0.9)
+          .from('.hero-sub', { opacity: 0, y: 16, duration: 0.8 }, 0.9)
 
         // Flip measures in pixels, so the zoom is rebuilt whenever the width
         // changes (not the height: a phone's address bar would rebuild it
@@ -84,13 +85,9 @@ export default function Hero({ onOpen }) {
                 Flip.to(final, { duration: 1, ease: 'power1.inOut', simple: true, absolute: true }),
                 0,
               )
-              .to(
-                '.hero-mark-line',
-                // A viewport's width each way, so both lines clear the screen.
-                { x: (i) => (i ? 1 : -1) * window.innerWidth, duration: 0.7, ease: 'power2.in' },
-                0,
-              )
-              .to('.hero-caption', { opacity: 0, y: 40, duration: 0.3, ease: 'power1.in' }, 0)
+              // The final layout is full height, so the band has to clear the
+              // bottom edge before the key frame reaches it.
+              .to('.hero-band', { yPercent: 100, duration: 0.5, ease: 'power2.in' }, 0)
               .to('.is-key .sheet-shade', { opacity: 0, duration: 0.6 }, 0.2)
               .fromTo(
                 '.hero-focus',
@@ -146,29 +143,21 @@ export default function Hero({ onOpen }) {
               height={photo.height}
               decoding="async"
               fetchPriority={i === 0 ? 'high' : 'auto'}
+              style={photo.focus ? { objectPosition: photo.focus } : undefined}
             />
             <span className="sheet-shade" aria-hidden="true" />
           </button>
         ))}
       </div>
 
-      {/* Lowercase in the source and uppercased by CSS, like every wordmark here. */}
-      <h1 className="hero-mark" aria-label="vzlmr, photography by Faizal Amri">
-        <span className="hero-mark-line" aria-hidden="true">
-          <span>vzl</span>
-        </span>
-        <span className="hero-mark-line" aria-hidden="true">
-          <span>mr</span>
-        </span>
-      </h1>
-
-      <div className="hero-caption">
-        <p className="hero-tagline">
-          Light, held <em>still</em>
-        </p>
-        <p className="hero-sub">
-          City, sky and street photography from Kuala Lumpur.
-        </p>
+      <div className="hero-band">
+        {/* Lowercase in the source and uppercased by CSS, like every wordmark here. */}
+        <h1 className="hero-mark" aria-label="vzlmr, photography by Faizal Amri">
+          <span className="hero-mark-line" aria-hidden="true">
+            <span>vzlmr</span>
+          </span>
+        </h1>
+        <p className="hero-sub">City, sky and street photography from Kuala Lumpur.</p>
       </div>
 
       {/* Hidden until the key frame fills the screen; the zoom brings it in. */}

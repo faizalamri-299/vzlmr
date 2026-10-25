@@ -255,6 +255,8 @@ a { color: inherit; }
    viewport, laid straight over the photographs. No vignette, no soft focus:
    the frames are dimmed evenly and the type does the shouting. */
 .hero {
+  /* The wordmark band's height; the wall fills the rest of the screen. */
+  --band: clamp(7rem, 24svh, 15rem);
   position: relative;
   height: 100svh;
   min-height: 520px;
@@ -269,7 +271,7 @@ a { color: inherit; }
    counted, so the key frame lands at 0, edge to edge. */
 .sheet {
   position: absolute;
-  inset: 0;
+  inset: 0 0 var(--band);
   display: grid;
   grid-template-columns: 1fr 1fr 1.5fr 1fr 1fr;
   grid-template-rows: repeat(3, 1fr);
@@ -280,6 +282,7 @@ a { color: inherit; }
   gap: 2px;
 }
 .sheet.is-final {
+  bottom: 0;
   left: -50vw;
   right: -50vw;
   grid-template-columns:
@@ -321,26 +324,33 @@ a { color: inherit; }
   outline-offset: -2px;
 }
 
-/* Two lines, cropped at the left edge and nearly floor to ceiling. Each line
-   clips its own glyphs so the load can raise them up out of nowhere. Clicks
-   pass through to the frames underneath. */
-.hero-mark {
+/* The wordmark's own band under the wall, so it covers no photograph. One
+   line set to the band's height, sitting on its floor; the line clips its
+   glyphs so the load can raise them up out of nowhere. The zoom slides the
+   band off the bottom. */
+.hero-band {
   position: absolute;
   z-index: 2;
-  top: 50%;
-  left: -0.035em;
-  transform: translateY(-52%);
-  margin: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--band);
   display: flex;
-  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 0 clamp(4.5rem, 8vw, 7rem) 0 var(--gut);
+  background: var(--background);
+}
+.hero-mark {
+  margin: 0 0 -0.06em -0.04em;
   font-family: var(--display);
   font-weight: 400;
-  font-size: min(50svh, 44vw);
+  font-size: calc(var(--band) * 1.12);
   line-height: 0.8;
   letter-spacing: -0.04em;
   text-transform: uppercase;
   color: var(--bone);
-  pointer-events: none;
 }
 .hero-mark-line {
   display: block;
@@ -351,52 +361,11 @@ a { color: inherit; }
 }
 .hero-mark-line > span { display: block; }
 
-.hero-caption {
-  position: absolute;
-  z-index: 2;
-  right: clamp(4.5rem, 8vw, 7rem);
-  bottom: clamp(1.5rem, 5svh, 3rem);
-  max-width: 32rem;
-  text-align: right;
-  pointer-events: none;
-}
-.hero-tagline {
-  margin: 0;
-  font-family: var(--display);
-  font-size: clamp(2.5rem, 6vw, 5.5rem);
-  line-height: 0.88;
-  letter-spacing: -0.03em;
-  text-transform: uppercase;
-  color: var(--bone);
-}
-/* The New Abnormal palette across the word. The route matters: teal straight
-   into amber crosses a desaturated sage (#80a66c) that is nowhere in the
-   painting, so the sweep goes through the cover's own bone cream instead —
-   every midpoint then stays on-palette. Amber is the fallback, since with
-   `color: transparent` a dropped gradient would leave the word invisible. */
-.hero-tagline em {
-  font-style: normal;
-  color: var(--tna-amber);
-}
-@supports ((background-clip: text) or (-webkit-background-clip: text)) {
-  .hero-tagline em {
-    background: linear-gradient(
-      100deg,
-      var(--tna-teal) 0%,
-      var(--tna-sky) 24%,
-      var(--tna-bone) 50%,
-      var(--tna-gold) 76%,
-      var(--tna-amber) 100%
-    );
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-}
 .hero-sub {
-  margin: 0.9rem 0 0 auto;
-  max-width: 34ch;
+  margin: 0 0 clamp(1rem, 3svh, 1.75rem);
+  max-width: 24ch;
   font-size: 0.95rem;
+  text-align: right;
   color: var(--bone);
   opacity: 0.8;
 }
@@ -444,12 +413,10 @@ a { color: inherit; }
     right: -25vw;
     grid-template-columns: calc(25vw - 2px) 100vw calc(25vw - 2px);
   }
-  .hero-mark { font-size: 46vw; }
-  .hero-caption {
-    left: var(--gut);
-    right: var(--gut);
-    max-width: none;
-  }
+  /* Too narrow for the line beside the name: the name takes the band. */
+  .hero { --band: 9rem; }
+  .hero-band { padding-right: var(--gut); }
+  .hero-sub { display: none; }
 }
 
 /* ── Section rail ─────────────────────────────────────────────────────── */

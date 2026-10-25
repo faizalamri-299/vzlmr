@@ -24,7 +24,8 @@ full-size JPEG masters live in `photos-src/`; `python scripts/photos.py` writes 
 960 and full-width (≤1536) WebP copies to `public/photos/`, without EXIF/GPS. Only the
 WebPs ship. `photo(name, width)` in the manifest builds `src` + `srcSet` from those same
 widths, and every `<img>` passes its own `sizes`. The user chose the
-categories City / Sky / Wildlife / Street to fit them, and Merdeka 118 as the hero.
+categories City / Sky / Wildlife / Street to fit them, and Merdeka 118 as the hero; later they switched the hero to the
+flag (Jalur Gemilang), shot on an SLR.
 In `src/data/photos.js`, `hero: true` marks the hero's key frame and `about: true` the
 About image; each category row's cover is that category's first photo. Titles and
 locations are inferred from the pictures: "Floating Mosque, Kuala Terengganu" is a
@@ -167,7 +168,9 @@ are pushed past the edges. Each final grid must **sum to its own width including
 `1fr` tracks and threw the key frame 708px off course. The key frame is the photo
 flagged `hero` (else the first landscape one). A tall photo works, since the frame
 covers the screen and crops to its middle band, but the subject has to sit in that band:
-on Merdeka 118 at 1440×900 the spire's tip is cut and the tower body fills the screen.
+so the key frame can set `focus` (an object-position). The flag sits above the middle
+and uses `center 38%`, worked out so the whole flag clears the header at both 1440×900
+and 1920×1080: wider screens show a thinner band, so 30% cut the flag's bottom at 1920.
 Dimming is a `.sheet-shade` overlay, not a filter, so the key frame's brightening stays on
 the compositor. The zoom is rebuilt on width change only (Flip measures pixels).
 
@@ -224,7 +227,7 @@ App.jsx          owns viewer state + contentRef (the footer watches it)
                  the hero's giant one has gone (.is-past-hero)
   Rail           fixed section scale, right edge; ticks at true page positions
   main.content   ← opaque lid; the footer is revealed from under this
-    Hero         bento wall + cropped wordmark; pinned, scrubbed Flip zoom
+    Hero         bento wall + wordmark band; pinned, scrubbed Flip zoom
     Planes       3D velocity carousel (see §3)
     Gallery      filterable masonry; the accessible route to every photo
     TextLines    categories band: four centred words, scrub-brightened
@@ -307,6 +310,11 @@ Decisions the user made explicitly. Don't quietly reverse them.
   hard 2px gutters, mono labels. The gallery grid and the footer are still the earlier
   design (the footer deliberately: the user liked its reveal, and jemputlah records that a
   giant name closing the footer was something they found off).
+- **The wordmark must not cover the photos.** The user disliked the "Light, held still"
+  tagline and found the two-line VZL/MR over the wall hid most of it. Now the wall stops
+  above a solid band (`--band` on `.hero`) holding VZLMR on one line plus the descriptor;
+  `.sheet.is-final` resets `bottom: 0` so the zoom still ends full-screen, and the zoom
+  slides the band off (`yPercent: 100`). Don't put type back over the wall.
 - *(Earlier, now superseded on the first screen:)* **simple and minimalist**, and
   **everything centred** — hero, section heads, About, Contact, footer columns.
 - Likes the motion.dev house style; asked for it specifically over earlier work.
@@ -330,7 +338,7 @@ Roughly in priority order:
    (floating mosque) are unconfirmed guesses.
 2. **Image delivery** is done: responsive WebP plus `sizes` everywhere, lazy reel and
    below-fold images, and the hero key frame preloaded from `index.html` with
-   `fetchpriority="high"`. **That preload is hard-coded to merdeka-118**, so change it
+   `fetchpriority="high"`. **That preload is hard-coded to jalur-gemilang**, so change it
    with the `hero` flag. Measured over CDP with the cache off: the first screen went from
    3.7MB of JPEG (every photo at full size, on any device) to 435KB at 1440×900 and
    1.37MB on a 3× phone. LCP in local headless is dominated by the hero intro timeline,

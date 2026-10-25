@@ -30,6 +30,7 @@ export const categories = [
   { id: 'street', label: 'Street' },
 ]
 
+// `focus` (optional) is an object-position for the hero's cover crop.
 // Order matters: `hero` marks the frame the hero zooms into and `about` the
 // About image; the hero wall shows the first nine, the reel the first ten, and
 // each category row's cover is that category's first photo. Petronas at night
@@ -45,7 +46,6 @@ export const photos = [
     location: 'Kuala Lumpur',
     year: 2024,
     category: 'city',
-    hero: true,
   },
   {
     id: 'macaw',
@@ -179,6 +179,10 @@ export const photos = [
     location: 'Kuala Lumpur',
     year: 2025,
     category: 'sky',
+    hero: true,
+    // The flag sits above the middle; on a wide screen the cover crop keeps
+    // only a middle band, so lift the band to clear the header.
+    focus: 'center 38%',
   },
   {
     id: 'grey',

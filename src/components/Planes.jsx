@@ -1,16 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
-import {
-  AnimatePresence,
-  motion,
-  useMotionValueEvent,
-  useScroll,
-  useSpring,
-  useTransform,
-  useVelocity,
-  wrap,
-} from 'motion/react'
+import { useRef, useState } from 'react'
 import { photos } from '../data/photos'
 import { useMediaQuery } from '../hooks/useMediaQuery'
+import { gsap, ScrollTrigger, useGSAP } from '../lib/gsap'
 import ScrambleText from './ScrambleText'
 
 /**
@@ -43,90 +34,151 @@ const TOTAL_PLANES = 10
 const STEP = PLANE_WIDTH + PLANE_GAP
 const SPAN = STEP * TOTAL_PLANES
 
-function Plane({ index, photo, scrollX, scrollVelocity, isHovered, onHover, onOpen }) {
-  const start = index * STEP
+const wrapRow = gsap.utils.wrap(-SPAN / 2, SPAN / 2)
 
-  const hoverOffset = useSpring(0, { stiffness: 400, damping: 25 })
-  const waveOffset = useSpring(0, { stiffness: 300, damping: 20, mass: 0.3 })
+/**
+ * The reference chases the wave with a stiff, near-critically-damped spring
+ * (stiffness 300, damping 20, mass 0.3) that lands in about 50ms. An
+ * exponential chase with that time constant reads the same and costs one
+ * multiply per plane.
+ */
+const WAVE_LAG = 0.05
 
-  // The wave is a function of where this plane sits in the row and how fast the
-  // row is currently moving — so the crest travels along it, not with it.
-  useMotionValueEvent(scrollVelocity, 'change', (velocity) => {
-    const centered = wrap(-SPAN / 2, SPAN / 2, start + scrollX.get())
-    const wavePhase = Math.sin((centered / (SPAN / 2)) * Math.PI * 2)
-    waveOffset.set((velocity / 50) * wavePhase * 5)
-  })
+/** Seconds the row takes to catch up with the scroll; stands in for the reference's spring. */
+const SCROLL_LAG = 0.5
 
-  useEffect(() => {
-    hoverOffset.set(isHovered ? -30 : 0)
-  }, [isHovered, hoverOffset])
-
-  const transform = useTransform(() => {
-    const centered = wrap(-SPAN / 2, SPAN / 2, start + scrollX.get())
-    const y = centered * -0.35 + waveOffset.get() + hoverOffset.get()
-    const z = centered * -1.2
-    return `translate3d(${centered}px, ${y}px, ${z}px) rotateY(-50deg)`
-  })
-
+function Plane({ index, photo, isHovered, planeRef, onHover, onOpen }) {
   return (
-    <motion.div
-      className="plane"
-      style={{
-        transform,
-        zIndex: isHovered ? 100 : 1,
-        filter: isHovered ? 'brightness(1.15)' : 'brightness(1)',
-      }}
-      onHoverStart={() => onHover(index)}
-      onHoverEnd={() => onHover(null)}
+    <div
+      className={`plane${isHovered ? ' is-hovered' : ''}`}
+      ref={planeRef}
+      onMouseEnter={() => onHover(index)}
+      onMouseLeave={() => onHover(null)}
       onClick={onOpen}
     >
       <div className="plane-image-container">
-        <img className="plane-image" src={photo.src} alt="" draggable={false} />
+        <img
+          className="plane-image"
+          src={photo.src}
+          alt=""
+          draggable={false}
+          decoding="async"
+        />
       </div>
 
       <div className="plane-index">{String(index).padStart(2, '0')}</div>
 
-      <AnimatePresence>
-        {isHovered && (
-          <motion.div
-            className="label-container"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-          >
-            <motion.div
-              className="label-line"
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              exit={{ scaleX: 0 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
-            />
-            <div className="label-text">
-              <ScrambleText text={photo.title} active={isHovered} />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+      <div className="label-container">
+        <div className="label-line" />
+        <div className="label-text">
+          <ScrambleText text={photo.title} active={isHovered} />
+        </div>
+      </div>
+    </div>
   )
 }
 
 export default function Planes({ onOpen }) {
   const isStatic = useMediaQuery('(max-width: 720px), (prefers-reduced-motion: reduce)')
   const trackRef = useRef(null)
+  const planeRefs = useRef([])
+  const lifts = useRef([])
+  const render = useRef(() => {})
   const [hovered, setHovered] = useState(null)
 
-  const { scrollYProgress } = useScroll({
-    target: trackRef,
-    offset: ['start start', 'end end'],
-  })
+  const { contextSafe } = useGSAP(
+    () => {
+      const track = trackRef.current
+      const planes = planeRefs.current
+      if (isStatic || !track) return
 
-  // One full cycle of the row per pinned run, smoothed by the same spring the
-  // reference uses — the spring is what gives `useVelocity` something to read.
-  const rawScrollX = useTransform(scrollYProgress, [0, 1], [0, -SPAN])
-  const scrollX = useSpring(rawScrollX, { stiffness: 100, damping: 30, mass: 0.5 })
-  const scrollVelocity = useVelocity(scrollX)
+      // Driven from 0 to -SPAN: one full cycle of the row per pinned run.
+      const row = { x: 0 }
+      const wave = planes.map(() => 0)
+      // One reusable quickTo per plane for the hover lift, rather than a fresh
+      // tween on every mouse-enter.
+      const lift = planes.map(() => ({ y: 0 }))
+      lifts.current = lift.map((l) =>
+        gsap.quickTo(l, 'y', {
+          duration: 0.45,
+          ease: 'power3.out',
+          onUpdate: () => render.current(),
+        }),
+      )
+
+      // quickSetter skips GSAP's per-call parsing; this runs 30 times a frame.
+      const set = planes.map((el) => ({
+        x: gsap.quickSetter(el, 'x', 'px'),
+        y: gsap.quickSetter(el, 'y', 'px'),
+        z: gsap.quickSetter(el, 'z', 'px'),
+      }))
+      gsap.set(planes, { rotationY: -50, force3D: true })
+
+      render.current = () => {
+        for (let i = 0; i < planes.length; i++) {
+          const centered = wrapRow(i * STEP + row.x)
+          set[i].x(centered)
+          set[i].y(centered * -0.35 + wave[i] + lift[i].y)
+          set[i].z(centered * -1.2)
+        }
+      }
+
+      let lastX = 0
+      const tick = (time, deltaTime) => {
+        const dt = Math.max(deltaTime, 1) / 1000
+        const velocity = (row.x - lastX) / dt
+        lastX = row.x
+
+        // Row still and the wave at rest: leave the DOM alone.
+        if (velocity === 0 && wave.every((w) => w === 0)) return
+
+        const k = 1 - Math.exp(-dt / WAVE_LAG)
+        for (let i = 0; i < planes.length; i++) {
+          // A function of where the plane sits in the row and how fast the row
+          // is moving, so the crest travels along it, not with it.
+          const centered = wrapRow(i * STEP + row.x)
+          const phase = Math.sin((centered / (SPAN / 2)) * Math.PI * 2)
+          const target = (velocity / 50) * phase * 5
+          wave[i] += (target - wave[i]) * k
+          if (target === 0 && Math.abs(wave[i]) < 0.01) wave[i] = 0
+        }
+        render.current()
+      }
+
+      gsap.to(row, {
+        x: -SPAN,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: track,
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: SCROLL_LAG,
+        },
+      })
+
+      // The row is on screen for longer than its own scroll range (the pin
+      // enters and leaves the viewport too), so the loop runs for the track's
+      // whole visible life and sleeps the rest of the time.
+      ScrollTrigger.create({
+        trigger: track,
+        start: 'top bottom',
+        end: 'bottom top',
+        onToggle: (self) =>
+          self.isActive ? gsap.ticker.add(tick) : gsap.ticker.remove(tick),
+      })
+
+      render.current()
+      return () => gsap.ticker.remove(tick)
+    },
+    { dependencies: [isStatic], revertOnUpdate: true },
+  )
+
+  // Runs after useGSAP has, so contextSafe keeps anything it starts inside the
+  // context, killed on unmount like everything else.
+  const onHover = contextSafe((index) => {
+    setHovered(index)
+    lifts.current.forEach((liftTo, i) => liftTo(i === index ? -30 : 0))
+  })
 
   return (
     <section
@@ -174,10 +226,9 @@ export default function Planes({ onOpen }) {
                       key={i}
                       index={i}
                       photo={photos[photoIndex]}
-                      scrollX={scrollX}
-                      scrollVelocity={scrollVelocity}
                       isHovered={hovered === i}
-                      onHover={setHovered}
+                      planeRef={(el) => (planeRefs.current[i] = el)}
+                      onHover={onHover}
                       onOpen={() => onOpen(photos, photoIndex)}
                     />
                   )

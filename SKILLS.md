@@ -5,8 +5,10 @@ design came from, which numbers are load-bearing, what breaks silently, and how 
 verify scroll-driven work in this repo without wasting an hour rediscovering the
 traps. Read this before touching `src/`.
 
-Stack: React 19 + Vite 8, `motion` 13 (Framer Motion's successor), plain CSS in one
-file. No CSS framework, no test runner. Checks are `npx oxlint` and `npx vite build`.
+Stack: React 19 + Vite 8, GSAP 3 + ScrollTrigger via `@gsap/react` (registered once in
+`src/lib/gsap.js` — import from there), plain CSS in one file. The site was built on
+`motion` and ported to GSAP in Oct 2026; the motion.dev references below still describe
+the *design*, not the library. No CSS framework, no test runner. Checks are `npx oxlint` and `npx vite build`.
 Dev server: `npm run dev`.
 
 ---
@@ -14,7 +16,7 @@ Dev server: `npm run dev`.
 ## 1. What this site is
 
 A single-page photography portfolio for **vzlmr** (Faizal Amri, Kuala Lumpur).
-Sections in order: Hero → Planes (3D surf) → Gallery grid → TextLines band → About →
+Sections in order: Hero → Planes (3D surf) → Gallery grid → categories band → About →
 Contact, then a footer that is revealed from underneath the page.
 
 **The content is placeholder.** `src/data/photos.js` serves seeded picsum URLs, so
@@ -70,11 +72,10 @@ a desaturated sage that is nowhere in the painting. Going teal → sky → bone 
 amber keeps every midpoint on-palette (`#1d9fbb`, `#80b5b5`, `#e3c553`, `#fdbf10`).
 Do not "simplify" it to a two-stop gradient.
 
-### The three implemented Motion examples
+### The two implemented Motion examples
 
 | Section | Reference |
 | --- | --- |
-| `TextLines.jsx` | `examples.motion.dev/vue/scroll-text-lines` |
 | `Planes.jsx` | `examples.motion.dev/vue/scroll-velocity-linked-offset` |
 | `Footer.jsx` | `examples.motion.dev/react/footer-reveal` |
 
@@ -87,7 +88,8 @@ extract between the first and last backtick. That is how the exact values in thi
 were obtained — do the same rather than guessing if you need to re-check one.
 
 Two Motion+ *components* used by those examples are paid and were reimplemented here:
-`Ticker` (as the loop inside `TextLines.jsx`) and `ScrambleText` (`ScrambleText.jsx`).
+`Ticker` (since removed with the ticker band) and `ScrambleText` (`ScrambleText.jsx`). GSAP's
+own ScrambleText plugin was tried and dropped: 4KB gzip for ten-character labels.
 
 ---
 
@@ -133,11 +135,19 @@ Also required: `.content` must keep an **opaque background**, or the footer show
 through before it is uncovered. It sits at `z-index: 1` over the footer's `z-index: -1`,
 inside `.page` which has `isolation: isolate`.
 
-### Ticker loop
+### Planes — how the GSAP port maps onto the reference's springs
 
-Offsets are `scrollY × [0.5, -0.7, 0.6, -0.8]` (reference values). Wrapping is by **one
-solid/outline pair width**, because the row is periodic at that interval — that is why
-the seam never shows. Copies rendered = `ceil(viewportWidth / pairWidth) + 2`.
+Motion's chain was scroll → spring → `useVelocity` → per-plane wave spring. In GSAP:
+a `scrub: 0.5` tween drives `row.x` (the 0.5s lag stands in for the scroll spring), and
+one `gsap.ticker` loop derives velocity from `row.x` frame to frame and chases the wave
+with a 50ms exponential (the reference's wave spring is near-critically damped and lands
+in about that). The loop is added only while the track is on screen and skips DOM writes
+when the row and wave are at rest. Hover lift is one `quickTo` per plane.
+
+### Categories band
+
+Replaced the four-line ticker in Oct 2026 — the user found it off-putting. Four centred
+words, each scrubbed from opacity 0.12 to 1 (plus a small rise) as it crosses mid-screen.
 
 ### Type traps
 
@@ -164,7 +174,7 @@ App.jsx          owns viewer state + contentRef (the footer watches it)
     Hero         centred title screen, radial vignette pooled under the words
     Planes       3D velocity carousel (see §3)
     Gallery      filterable masonry; the accessible route to every photo
-    TextLines    four scroll-linked tickers
+    TextLines    categories band: four centred words, scrub-brightened
     About        single centred column
     Contact      single centred column
   Footer         sticky under-page reveal on a blueberry oklch field
@@ -179,7 +189,8 @@ looking at (the gallery passes its *filtered* list deliberately).
 arrows, touch swipe, neighbour preloading, `aria-modal` with a positional label.
 It needed no changes across this whole build — leave it alone.
 
-Hooks: `useReveal` (one-shot IntersectionObserver fade-in; opt in with
+Hooks: `useReveal` (also re-run by `Gallery` on filter change — filtering mounts tiles the
+page-level observer never saw, which left them at opacity 0) (one-shot IntersectionObserver fade-in; opt in with
 `className="reveal"`, respects reduced-motion), `useMediaQuery` (live `matchMedia`;
 **returns `false` on first render**, so mobile briefly mounts the 3D tree before
 swapping to the static strip).
@@ -187,6 +198,15 @@ swapping to the static strip).
 ---
 
 ## 5. Verifying scroll-driven work — the hard-won part
+
+**On Windows (current machine), skip the `--dump-dom` approach below:** under
+`--virtual-time-budget` headless Chrome never fires `requestAnimationFrame` there, so
+probes never finish. Drive real-time headless Chrome over CDP instead: launch with
+`--remote-debugging-port`, connect with Node's built-in `WebSocket`, `Runtime.evaluate`
+to scroll and read state, `Input.dispatchMouseEvent` for hover,
+`Emulation.setEmulatedMedia` for reduced motion. Always pass a fresh `--user-data-dir`
+or it loads the user's real profile. Real clock means scrub lag and the wave settle
+naturally — no sleep-resource trick needed. Notes below are from the earlier macOS setup.
 
 Headless Chrome is the only automation available here (`/Applications/Google Chrome.app`).
 It has sharp edges that cost real time to discover:
@@ -211,10 +231,12 @@ It has sharp edges that cost real time to discover:
   so unloaded images look exactly like a layout bug. For deterministic shots, patch the
   built bundle's `https://picsum.photos` → a local server that returns generated SVGs.
 
-Verified this way and worth not re-deriving: plane transforms match
-`y = centered × -0.35` / `z = centered × -1.2` exactly; all four tickers match
-`wrap(-pairWidth, 0, scrollY × speed)` to three decimals; the footer reveal scrubs
-opacity 0→1, scale 0.9→1, blur 6px→0 and reaches 1.0 at the page bottom.
+Verified after the GSAP port (CDP, 1440 and 390 wide, plus reduced motion) and worth
+not re-deriving: at rest plane transforms match `y = centered × -0.35` /
+`z = centered × -1.2` exactly, leave that line mid-scroll (the wave) and return to it
+settled; hover lift is exactly -30px; the footer reveal scrubs opacity 0→1, scale
+0.9→1, blur 6px→0 and reaches 1.0 at the page bottom; the categories band scrubs
+0.12→1 in sequence.
 
 ---
 
@@ -245,12 +267,12 @@ Roughly in priority order:
    attribute, so all ten fetch eagerly below the fold, and no `width`/`height`. Gallery
    tiles *do* lazy-load. With real photos this is the difference between a fast page and
    a very heavy one.
-3. **Reduced-motion is only half-covered.** `Planes` respects it; the tickers and the
-   footer reveal do not. The blanket `@media (prefers-reduced-motion: reduce)` rule
-   cannot help — it zeroes animation/transition durations, and this motion is neither.
+3. ~~Reduced-motion half-covered~~ — done: the footer and categories band use
+   `gsap.matchMedia`, so under `reduce` they render static and fully visible.
 4. **No tests.** The scroll geometry is the thing worth pinning, especially the §3
    wrap invariant.
 5. **No `og:image` or canonical**, so shared links have no preview.
-6. Bundle is 344KB / 110KB gzip, mostly Motion. Secondary to (2).
+6. Bundle is 322KB / 110KB gzip — the GSAP port came out level with Motion
+   (gsap 28KB + ScrollTrigger 18KB gzip). Secondary to (2).
 7. Open design question: the page is ~10,400px and the surf, the grid and the text band
    all say "here are the categories". Cutting one is the user's call.

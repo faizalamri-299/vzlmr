@@ -1,74 +1,58 @@
-import { useEffect, useRef, useState } from 'react'
-import { motion, useScroll, useTransform, wrap } from 'motion/react'
+import { useRef } from 'react'
+import { gsap, useGSAP } from '../lib/gsap'
 
 /**
- * Scroll Text Lines, after motion.dev's example: four lines of display type on
- * infinite tickers, each offset by the page's scroll position at its own speed
- * and direction, alternating solid and outlined copies of the word.
+ * The four categories, stacked and centred. Each word sits dim and brightens to
+ * full as it scrolls up into the middle of the screen, scrubbed to the scroll so
+ * it never plays on its own. Replaced the earlier four-line ticker band, which
+ * read as busy next to the photographs.
  *
- * The example uses motion-plus's `Ticker`, which is a Motion+ component, so the
- * looping is done here: one solid/outline pair is measured, enough pairs are
- * laid down to overflow the viewport, and the offset wraps by one pair's width —
- * the row is periodic at that interval, so the seam never shows.
+ * Only opacity and a short rise are animated, both compositor-only.
  */
-
-/** Speeds and directions from the reference, verbatim. */
-const LINES = [
-  { text: 'Landscape', speed: 0.5 },
-  { text: 'Portrait', speed: -0.7 },
-  { text: 'Street', speed: 0.6 },
-  { text: 'Architecture', speed: -0.8 },
-]
-
-function TickerLine({ text, speed, index }) {
-  const pairRef = useRef(null)
-  const [pairWidth, setPairWidth] = useState(0)
-  const [copies, setCopies] = useState(3)
-
-  const { scrollY } = useScroll()
-  const x = useTransform(scrollY, (y) =>
-    pairWidth ? wrap(-pairWidth, 0, y * speed) : 0,
-  )
-
-  useEffect(() => {
-    const pair = pairRef.current
-    if (!pair) return
-
-    const measure = () => {
-      const width = pair.getBoundingClientRect().width
-      if (!width) return
-      setPairWidth(width)
-      setCopies(Math.ceil(document.documentElement.clientWidth / width) + 2)
-    }
-
-    measure()
-    const ro = new ResizeObserver(measure)
-    ro.observe(pair)
-    return () => ro.disconnect()
-  }, [])
-
-  return (
-    <motion.div className={`ticker-line ticker-${index}`} style={{ x }} aria-hidden="true">
-      {Array.from({ length: copies }, (_, i) => (
-        <span className="ticker-pair" key={i} ref={i === 0 ? pairRef : undefined}>
-          <span className="text-solid">{text}</span>
-          <span className="text-outline">{text}</span>
-        </span>
-      ))}
-    </motion.div>
-  )
-}
+const LINES = ['Landscape', 'Portrait', 'Street', 'Architecture']
 
 export default function TextLines() {
+  const sectionRef = useRef(null)
+
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia()
+      mm.add('(prefers-reduced-motion: no-preference)', () => {
+        gsap.utils.toArray('.line').forEach((line) => {
+          gsap.fromTo(
+            line,
+            { opacity: 0.12, yPercent: 18 },
+            {
+              opacity: 1,
+              yPercent: 0,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: line,
+                start: 'top 88%',
+                end: 'center 55%',
+                scrub: true,
+              },
+            },
+          )
+        })
+      })
+    },
+    { scope: sectionRef },
+  )
+
   return (
-    <section className="text-section" aria-labelledby="lines-title">
+    <section className="text-section" ref={sectionRef} aria-labelledby="lines-title">
       <h2 className="sr-only" id="lines-title">
-        Landscape, portrait, street and architecture
+        Categories
       </h2>
 
-      {LINES.map((line, i) => (
-        <TickerLine key={line.text} text={line.text} speed={line.speed} index={i} />
-      ))}
+      <ul className="lines">
+        {LINES.map((text) => (
+          <li className="line" key={text}>
+            {text}
+          </li>
+        ))}
+      </ul>
     </section>
   )
 }

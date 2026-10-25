@@ -1,5 +1,5 @@
-import { useLayoutEffect, useRef, useState } from 'react'
-import { motion, useMotionTemplate, useScroll, useTransform } from 'motion/react'
+import { useRef } from 'react'
+import { gsap, useGSAP } from '../lib/gsap'
 
 const COLUMNS = [
   { title: 'Work', links: ['Landscape', 'Portrait', 'Street', 'Architecture'] },
@@ -14,49 +14,49 @@ const LEGAL = ['Privacy', 'Terms', 'Licensing']
  * `z-index: -1` and the content scrolls off it. Opacity, scale and blur scrub
  * from 0 / 0.9 / 6px to 1 / 1 / 0 across one footer-height of scroll, so it
  * resolves into focus rather than simply sliding into view.
+ *
+ * One footer-height is also exactly how far you *can* scroll past the
+ * content's end, so the reveal lands on 1.0 at the very bottom of the page.
  */
 export default function Footer({ contentRef }) {
   const footerRef = useRef(null)
-  const [revealAt, setRevealAt] = useState(0.35)
 
-  // How much of the scroll past the content's end the reveal should take: one
-  // footer-height, expressed as a fraction of the viewport.
-  useLayoutEffect(() => {
-    const footer = footerRef.current
-    if (!footer) return
+  useGSAP(
+    () => {
+      const footer = footerRef.current
+      if (!footer || !contentRef.current) return
 
-    const update = () =>
-      setRevealAt(
-        Math.min(0.95, Math.max(0.05, footer.offsetHeight / (window.innerHeight || 1))),
-      )
-
-    update()
-    const ro = new ResizeObserver(update)
-    ro.observe(footer)
-    window.addEventListener('resize', update)
-    return () => {
-      ro.disconnect()
-      window.removeEventListener('resize', update)
-    }
-  }, [])
-
-  const { scrollYProgress } = useScroll({
-    target: contentRef,
-    offset: ['end end', 'end start'],
-  })
-
-  const opacity = useTransform(scrollYProgress, [0, revealAt], [0, 1])
-  const scale = useTransform(scrollYProgress, [0, revealAt], [0.9, 1])
-  const blur = useTransform(scrollYProgress, [0, revealAt], [6, 0])
-  const filter = useMotionTemplate`blur(${blur}px)`
+      // Reduced motion gets the footer as plain, fully visible content.
+      const mm = gsap.matchMedia()
+      mm.add('(prefers-reduced-motion: no-preference)', () => {
+        gsap
+          .timeline({
+            defaults: { ease: 'none' },
+            scrollTrigger: {
+              trigger: contentRef.current,
+              start: 'bottom bottom',
+              // A function so a resize or late font swap re-measures the footer.
+              end: () => `+=${footer.offsetHeight}`,
+              scrub: true,
+              invalidateOnRefresh: true,
+            },
+          })
+          .fromTo('.footer-fade', { opacity: 0 }, { opacity: 1 }, 0)
+          .fromTo(
+            '.footer-scale',
+            { scale: 0.9, filter: 'blur(6px)' },
+            { scale: 1, filter: 'blur(0px)', transformOrigin: '50% 100%' },
+            0,
+          )
+      })
+    },
+    { scope: footerRef },
+  )
 
   return (
     <footer className="reveal-footer" ref={footerRef}>
-      <motion.div className="footer-fade" style={{ opacity }}>
-        <motion.div
-          className="footer-scale"
-          style={{ scale, filter, transformOrigin: '50% 100%' }}
-        >
+      <div className="footer-fade">
+        <div className="footer-scale">
           <div className="footer-inner">
             <div className="footer-brand">
               <span className="footer-wordmark">vzlmr</span>
@@ -92,8 +92,8 @@ export default function Footer({ contentRef }) {
               </ul>
             </div>
           </div>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
     </footer>
   )
 }

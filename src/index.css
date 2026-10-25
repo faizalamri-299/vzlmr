@@ -453,6 +453,11 @@ a { color: inherit; }
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   transition: filter 0.2s ease;
   cursor: zoom-in;
+  will-change: transform;
+}
+.plane.is-hovered {
+  z-index: 100;
+  filter: brightness(1.15);
 }
 .plane-image-container {
   position: absolute;
@@ -482,13 +487,19 @@ a { color: inherit; }
   display: flex;
   align-items: center;
   pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
 }
 .label-line {
   width: 120px;
   height: 1px;
   background-color: var(--white);
   transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 0.3s ease-out;
 }
+.plane.is-hovered .label-container { opacity: 1; }
+.plane.is-hovered .label-line { transform: scaleX(1); }
 .label-text {
   padding: 4px 8px;
   font-family: var(--mono);
@@ -558,43 +569,35 @@ a { color: inherit; }
   color: var(--white);
 }
 
-/* ── Scroll text lines ──────────────────────────────────────────────── */
-/* Four tickers, each offset by scrollY at its own speed. Sizes, the 2px stroke
-   and the 0.4 outline opacity are the reference's. */
+/* ── Categories band ────────────────────────────────────────────────── */
+/* Four words, stacked and centred; each brightens as it scrolls through the
+   middle of the screen (TextLines.jsx). Replaced the four-line ticker. */
 .text-section {
   width: 100%;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
   padding-block: clamp(5rem, 16vh, 11rem);
   border-block: 1px solid var(--border);
 }
 
-.ticker-line {
+.lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
-  width: max-content;
-  will-change: transform;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.25rem, 1vw, 0.75rem);
 }
-.ticker-pair { display: flex; }
 
-.ticker-line span {
+.line {
   font-family: var(--display);
   font-weight: 400;
   font-size: clamp(48px, 12vw, 120px);
-  line-height: 1.04;
+  line-height: 1;
   letter-spacing: -0.03em;
   text-transform: uppercase;
-  padding: 0 20px;
-}
-
-.text-solid { color: var(--white); }
-.text-outline {
-  color: transparent;
-  -webkit-text-stroke: 2px var(--white);
-  opacity: 0.4;
-}
-@media (max-width: 600px) {
-  .text-outline { -webkit-text-stroke: 1px var(--white); }
+  color: var(--white);
+  will-change: transform, opacity;
 }
 
 /* ── Section framing ────────────────────────────────────────────────── */
@@ -909,7 +912,12 @@ a { color: inherit; }
   background: var(--footer-field);
   color: var(--footer-ink);
 }
-.footer-scale { width: 100%; }
+/* The blur is a filter, so it repaints; its own layer keeps that repaint off
+   the rest of the page. */
+.footer-scale {
+  width: 100%;
+  will-change: transform, filter;
+}
 
 .footer-inner {
   width: 100%;

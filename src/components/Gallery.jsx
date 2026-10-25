@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { categories, photos } from '../data/photos'
+import { useReveal } from '../hooks/useReveal'
 
 export default function Gallery({ onOpen }) {
   const [active, setActive] = useState('all')
@@ -8,6 +9,10 @@ export default function Gallery({ onOpen }) {
     () => (active === 'all' ? photos : photos.filter((p) => p.category === active)),
     [active],
   )
+
+  // Filtering mounts tiles the page-level observer never saw; without this,
+  // switching back to "All" leaves them stuck at opacity 0.
+  useReveal([active])
 
   return (
     <section className="section shell" id="work">

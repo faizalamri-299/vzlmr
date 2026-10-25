@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef } from 'react'
+import { gsap } from '../lib/gsap'
 
 /** The reference's scramble alphabet, verbatim. */
 const CHARS = '!@#$%^&*()_+-=[]{}|;:,.<>?/~`░▒▓█▀▄■□▪▫●○◆◇◈◊※†‡'
@@ -9,34 +10,35 @@ const HOLD = 3
 const pick = () => CHARS[Math.floor(Math.random() * CHARS.length)]
 
 /**
- * Stands in for motion-plus's `ScrambleText`, which is a Motion+ component.
- * Characters settle left to right while the rest keep churning.
+ * Stands in for motion-plus's `ScrambleText`. Characters settle left to right
+ * while the rest keep churning. Hand-rolled rather than GSAP's ScrambleText
+ * plugin, which would add 4KB gzip for ten-character labels; it writes
+ * `textContent` directly on GSAP's ticker so React never re-renders per frame.
  */
 export default function ScrambleText({ text, active }) {
-  const [output, setOutput] = useState('')
+  const ref = useRef(null)
 
   useEffect(() => {
-    if (!active) return
+    const el = ref.current
+    if (!active || !el) return
 
     let frame = 0
-    let raf = requestAnimationFrame(function tick() {
+    const tick = () => {
       frame += 1
       const settled = Math.floor(frame / HOLD)
+      el.textContent = text
+        .split('')
+        .map((char, i) => (i < settled || char === ' ' ? char : pick()))
+        .join('')
+      if (settled >= text.length) gsap.ticker.remove(tick)
+    }
 
-      setOutput(
-        text
-          .split('')
-          .map((char, i) => (i < settled || char === ' ' ? char : pick()))
-          .join(''),
-      )
-
-      if (settled < text.length) raf = requestAnimationFrame(tick)
-    })
-
-    return () => cancelAnimationFrame(raf)
+    gsap.ticker.add(tick)
+    return () => {
+      gsap.ticker.remove(tick)
+      el.textContent = text
+    }
   }, [text, active])
 
-  // Falls back to the real text until the first scrambled frame lands, so the
-  // label is never briefly empty.
-  return <span>{active && output ? output : text}</span>
+  return <span ref={ref}>{text}</span>
 }

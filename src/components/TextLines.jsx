@@ -16,8 +16,9 @@ const ROWS = categories
   .filter((c) => c.id !== 'all')
   .map((c) => {
     const own = photos.filter((p) => p.category === c.id)
-    // Rows are wide and short, so a landscape-orientation cover crops least.
-    const cover = own.find((p) => p.width > p.height) ?? own[0]
+    // A flagged cover first; otherwise rows are wide and short, so a
+    // landscape-orientation photo crops least.
+    const cover = own.find((p) => p.cover) ?? own.find((p) => p.width > p.height) ?? own[0]
     return { ...c, count: own.length, cover }
   })
   .filter((row) => row.cover)
@@ -70,6 +71,7 @@ export default function TextLines({ onPick }) {
               src={row.cover.src}
               srcSet={row.cover.srcSet}
               sizes="100vw"
+              style={row.cover.focus ? { objectPosition: row.cover.focus } : undefined}
               alt=""
               loading="lazy"
               decoding="async"

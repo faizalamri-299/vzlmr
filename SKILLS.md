@@ -26,8 +26,11 @@ WebPs ship. `photo(name, width)` in the manifest builds `src` + `srcSet` from th
 widths, and every `<img>` passes its own `sizes`. The user chose the
 categories City / Sky / Wildlife / Street to fit them, and Merdeka 118 as the hero; later they switched the hero to the
 flag (Jalur Gemilang), shot on an SLR.
-In `src/data/photos.js`, `hero: true` marks the hero's key frame and `about: true` the
-About image; each category row's cover is that category's first photo. Titles and
+In `src/data/photos.js`, `hero: true` marks the hero's key frame, `about: true` the
+About image and `cover: true` a category row's photo (else that category's first, which
+is how the cat once became the Street cover; the user objected, so the cat is Wildlife).
+`focus` is an object-position used by the hero and the category rows, whose thin wide
+band crops a tall photo hard: the moonlit street uses `center 38%` to reach the dome. Titles and
 locations are inferred from the pictures: "Floating Mosque, Kuala Terengganu" is a
 guess the user hasn't confirmed. Years are the VSCO upload dates (from the media id's
 ObjectId timestamp), not capture dates.

@@ -30,10 +30,10 @@ export const categories = [
   { id: 'street', label: 'Street' },
 ]
 
-// `focus` (optional) is an object-position for the hero's cover crop.
-// Order matters: `hero` marks the frame the hero zooms into and `about` the
-// About image; the hero wall shows the first nine, the reel the first ten, and
-// each category row's cover is that category's first photo. Petronas at night
+// `focus` (optional) is an object-position for the hero's and category rows'
+// cover crops. `hero` marks the frame the hero zooms into, `about` the About
+// image and `cover` a category row's photo (else the category's first).
+// Order matters: the hero wall shows the first nine and the reel the first ten. Petronas at night
 // is only 720px wide (Instagram's largest), so it stays out of those spots.
 export const photos = [
   {
@@ -78,7 +78,7 @@ export const photos = [
     title: 'Upside Down',
     location: 'Kuala Lumpur',
     year: 2025,
-    category: 'street',
+    category: 'wildlife',
   },
   {
     id: 'balcony',
@@ -124,6 +124,9 @@ export const photos = [
     location: 'Shah Alam',
     year: 2026,
     category: 'street',
+    cover: true,
+    // A category row keeps a thin band; lift it to the dome and minarets.
+    focus: 'center 38%',
   },
   {
     id: 'under-clouds',
@@ -207,15 +210,16 @@ export const photos = [
     category: 'street',
   },
   {
-    id: 'hopper',
-    ...photo('leaf-hopper', 1440),
+    id: 'dragonfly',
+    ...photo('dragonfly', 1440),
     width: 1440,
     height: 1440,
-    alt: 'A small orange insect resting on a long green leaf',
+    alt: 'An orange dragonfly resting on the tip of a long green leaf',
     title: 'On the Blade',
     location: 'Kuala Lumpur',
     year: 2024,
     category: 'wildlife',
+    cover: true,
   },
   {
     id: 'siamang',
